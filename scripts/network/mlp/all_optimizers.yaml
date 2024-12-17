@@ -1,6 +1,6 @@
 program: sweep.py
 method: grid  # available methods: grid, random, bayes
-project: network_sweep
+project: network_mlp_all_optimizers
 metric:
   name: train_loss
   goal: minimize
@@ -8,15 +8,15 @@ parameters:
   batch_size:
     value: 128
   epochs:
-    value: 2
+    value: 10
   task:
     value: 'network'
   model:
-    values: ['logreg', 'mlp'] # , 'vgg'
+    value: 'mlp'
   optimizer:
-    values: ['OSMM'] # , 'NAG', 'Adam', 'OSGM', 'OSMM'
+    values: ['OSMM', 'NAG', 'Adam', 'OSGM', 'SGD']
   learning_rate:
-    values: [0.01] #, 0.1, 1.0
+    values: [0.1,0.01,0.001]
   scheduler:
     value: None
   lr_decay:

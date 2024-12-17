@@ -1,6 +1,6 @@
 program: sweep.py
 method: grid  # available methods: grid, random, bayes
-project: function_sweep
+project: function_least_squares_all_optimizers
 metric:
   name: loss
   goal: minimize
@@ -10,15 +10,15 @@ parameters:
   epochs:
     value: 10
   input_dim:
-    value: 10
+    value: 100
   task:
     value: 'function'
   model:
-    values: ['rosenbrock', 'rastrigin', 'least_squares']
+    value: 'least_squares'
   optimizer:
-    values: ['SGD'] # , 'NAG', 'Adam', 'OSGM', 'OSMM'
+    values: ['SGD', 'NAG', 'Adam', 'OSGM', 'OSMM']
   learning_rate:
-    values: [0.01] #, 0.1, 1.0
+    values: [0.01, 0.1, 1.0]
   scheduler:
     value: None
   lr_decay:
