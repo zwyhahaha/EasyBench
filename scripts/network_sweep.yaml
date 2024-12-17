@@ -1,0 +1,23 @@
+program: sweep.py
+method: grid  # available methods: grid, random, bayes
+project: network_sweep
+metric:
+  name: train_loss
+  goal: minimize
+parameters:
+  batch_size:
+    value: 128
+  epochs:
+    value: 2
+  task:
+    value: 'network'
+  model:
+    values: ['logreg', 'mlp'] # , 'vgg'
+  optimizer:
+    values: ['OSMM'] # , 'NAG', 'Adam', 'OSGM', 'OSMM'
+  learning_rate:
+    values: [0.01] #, 0.1, 1.0
+  scheduler:
+    value: None
+  lr_decay:
+    value: 1.0

@@ -1,0 +1,25 @@
+program: sweep.py
+method: grid  # available methods: grid, random, bayes
+project: function_sweep
+metric:
+  name: loss
+  goal: minimize
+parameters:
+  batches:
+    value: 1
+  epochs:
+    value: 10
+  input_dim:
+    value: 10
+  task:
+    value: 'function'
+  model:
+    values: ['rosenbrock', 'rastrigin', 'least_squares']
+  optimizer:
+    values: ['SGD'] # , 'NAG', 'Adam', 'OSGM', 'OSMM'
+  learning_rate:
+    values: [0.01] #, 0.1, 1.0
+  scheduler:
+    value: None
+  lr_decay:
+    value: 1.0
