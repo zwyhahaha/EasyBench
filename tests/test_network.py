@@ -47,6 +47,7 @@ def test_network(config, seed=42):
     optimizer = get_optimizer(optimizer_name, model.parameters(), config)
     scheduler = get_scheduler(optimizer, scheduler_name, lr_decay)
 
+    next_data, next_target = None, None
     for epoch in range(epochs):
         model.train()
         train_loss = 0
@@ -54,15 +55,17 @@ def test_network(config, seed=42):
             beta_epoch = 0
         for data, target in train_loader:
             data, target = Variable(data), Variable(target)
+            next_data, next_target = next(iter(train_loader))
+            next_data, next_target = Variable(next_data), Variable(next_target)
             if use_cuda:
                 data, target = data.cuda(), target.cuda()
+                next_data, next_target = next_data.cuda(), next_target.cuda()
             optimizer.zero_grad()
             output = model(data)
             loss = F.cross_entropy(output, target)
             loss.backward()
             if optimizer_name in ['OSMM']:
-                next_data, next_target = next(iter(train_loader))
-                next_data, next_target = Variable(next_data), Variable(next_target)
+                
                 def closure():
                     next_output = model(next_data)
                     loss = F.cross_entropy(next_output, next_target)

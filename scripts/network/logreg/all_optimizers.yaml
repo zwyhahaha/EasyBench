@@ -8,7 +8,7 @@ parameters:
   batch_size:
     value: 128
   epochs:
-    value: 4
+    value: 10
   task:
     value: 'network'
   model:

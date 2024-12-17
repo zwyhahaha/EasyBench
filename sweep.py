@@ -3,10 +3,10 @@ find the best hyperparameters using wandb sweeps
 """
 import wandb
 
-wandb.init()
+wandb.init(sync_tensorboard=True,settings=wandb.Settings(start_method='thread'))
 config = wandb.config
-task = config.task # ['function', 'network', 'llm']
-optimizer_name = config.optimizer # 'SGD', 'NAG', 'Adam', 'OSGM', 'OSMM'
+task = config.task
+optimizer_name = config.optimizer
 
 assert task in ['function', 'network', 'llm']
 assert optimizer_name in ['SGD', 'NAG', 'Adam', 'OSGM', 'OSMM']

@@ -1,5 +1,6 @@
 import torch
 from torch.optim.optimizer import Optimizer
+import numpy as np
 
 from .types import Betas2, OptFloat, OptLossClosure, Params
 
@@ -56,6 +57,9 @@ class OSGM(Optimizer):
                     prev_grad = state["prev_grad"]
                     eps = group["eps"]
                     lr = group["lr"]
+
+                    if group["stop_step"] is None:
+                        group["stop_step"] = np.inf
                     
                     if state["step"] % group["stop_step"] == 0:
                         state["Q"] = torch.zeros_like(p)
