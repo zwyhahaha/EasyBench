@@ -1,3 +1,4 @@
 learning_rate: 0.001
 scheduler: None
 lr_decay: 1.0
+relax_coef: 2.0

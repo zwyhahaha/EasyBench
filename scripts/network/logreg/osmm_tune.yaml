@@ -13,6 +13,8 @@ parameters:
     value: 'network'
   model:
     value: 'logreg'
+  dataset:
+    value: 'MNIST'
   optimizer:
     value: 'OSMM'
   learning_rate:

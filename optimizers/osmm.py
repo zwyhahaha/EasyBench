@@ -13,7 +13,7 @@ class OSMM(Optimizer):
         params: Params,
         lr: OptFloat = None,
         beta_lr: OptFloat = 1.0,
-        beta: float = 0.,
+        beta: float = 0.9,
         eps: float = 1e-08,
         weight_decay: float = 0.0,
         stop_step: OptFloat = None,

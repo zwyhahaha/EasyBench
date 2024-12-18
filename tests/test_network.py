@@ -31,7 +31,7 @@ def test_network(config, seed=42):
     wandb.run.name = f"{model}_{optimizer_name}_{config.learning_rate}"
 
     if model == 'logreg':
-        if config.dataset is None:
+        if not hasattr(config, 'dataset') or config.dataset is None:
             model = LogReg(input_dim=28 * 28, output_dim=10)
         else:
             input_dim, output_dim = get_data_info(config.dataset)
@@ -83,9 +83,7 @@ def test_network(config, seed=42):
             train_loss += loss.item()
         if scheduler is not None:
             scheduler.step()
-        wandb.log({'train_loss': train_loss / len(train_loader.dataset)})
-        if optimizer_name in ['OSMM']:
-            wandb.log({'beta': beta_epoch / len(train_loader.dataset)})
+        train_loss /= len(train_loader.dataset)
         
         model.eval()
         valid_loss = 0
@@ -97,4 +95,10 @@ def test_network(config, seed=42):
                 output = model(data)
                 valid_loss += F.cross_entropy(output, target, reduction='sum').item()
         valid_loss /= len(valid_loader.dataset)
-        wandb.log({'valid_loss': valid_loss})
+        if optimizer_name in ['OSMM']:
+            wandb.log({'beta': beta_epoch/len(train_loader),
+                       'train_loss': train_loss,
+                       'valid_loss': valid_loss})
+        else:
+            wandb.log({'train_loss': train_loss,
+                    'valid_loss': valid_loss})

@@ -18,12 +18,12 @@ def get_optimizer(optimizer_name, params, config):
     elif optimizer_name == 'Adam':
         optimizer = Adam(params, lr=learning_rate)
     elif optimizer_name == 'OSGM':
-        relax_coef = 1.0 if config.relax_coef is None else config.relax_coef
+        relax_coef = 1.0 if not hasattr(config,'relax_coef') else config.relax_coef
         optimizer = OSGM(params, lr=learning_rate, relax_coef=relax_coef)
     elif optimizer_name == 'OSMM':
-        relax_coef = 1.0 if config.relax_coef is None else config.relax_coef
-        beta_lr = 1.0 if config.beta_lr is None else config.beta_lr
-        beta = 0.0 if config.beta is None else config.beta
+        relax_coef = 1.0 if not hasattr(config,'relax_coef') else config.relax_coef
+        beta_lr = 1.0 if not hasattr(config,'beta_lr') else config.beta_lr
+        beta = 0.0 if not hasattr(config,'beta') else config.beta
         optimizer = OSMM(params, lr=learning_rate, beta_lr=beta_lr, beta=beta, relax_coef=relax_coef)
     else:
         raise ValueError("Invalid optimizer name")
@@ -40,7 +40,7 @@ def get_network_data(config):
     model = config.model
     batch_size = config.batch_size
     if model == 'logreg' or model == 'mlp':
-        if config.dataset is None or config.dataset == 'MNIST':
+        if not hasattr(config, 'dataset') or config.dataset == 'MNIST':
             train_loader = DataLoader(
                 datasets.MNIST('./data', train=True, download=True,
                             transform=transforms.Compose([

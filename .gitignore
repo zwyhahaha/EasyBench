@@ -4,4 +4,5 @@ data/LIBSVM/
 notes.md
 .vscode/
 .env
-# scripts/run_sweep.sh
+scripts/run_sweep.sh
+run.py

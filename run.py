@@ -10,38 +10,45 @@ import argparse
 parser = argparse.ArgumentParser(description='Train the model with the best hyperparameters.')
 parser.add_argument('--model', type=str, required=True, help='The model to use for training')
 parser.add_argument('--task', type=str, required=True, help='The task to perform')
+parser.add_argument('--dataset', type=str, required=True, help='dataset')
 parser.add_argument('--epochs', type=int, required=True, help='Number of epochs for training')
-parser.add_argument('--batches', type=int, required=True, help='Number of batches for training')
-parser.add_argument('--input_dim', type=int, required=True, help='Input dimension for the model')
+parser.add_argument('--batch_size', type=int, default=128, help='Number of batches for training')
 
 args = parser.parse_args()
 
 model = args.model
 task = args.task
+dataset = args.dataset
 epochs = args.epochs
-batches = args.batches
-input_dim = args.input_dim
+batch_size = args.batch_size
 optimizers = ['SGD', 'NAG', 'Adam', 'OSGM', 'OSMM']
 
-wandb.init(project=f'run_{model}_{task}_{epochs}_{batches}_{input_dim}')
-
+class Config:
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
+        
 for optimizer_name in optimizers:
-    config_path = f'params/{model}/{task}/{optimizer_name}.yaml'
+    wandb.init(project=f'run_{model}_{task}_{dataset}')
+
+    config_path = f'params/{task}/{model}/{optimizer_name}.yaml'
     with open(config_path, 'r') as file:
         config = yaml.safe_load(file)
 
-    wandb.config.update(config)
+    args.optimizer = optimizer_name
 
-    wandb.config.model = model
-    wandb.config.task = task
-    wandb.config.epochs = epochs
-    wandb.config.batches = batches
-    wandb.config.input_dim = input_dim
+    config.update(vars(args))
+
+    config = Config(**config)
+
+    wandb.config.update(config, allow_val_change=True)
 
     if task == 'function':
         from tests.test_function import test_function
         test_function(wandb.config)
+    elif task == 'network':
+        from tests.test_network import test_network
+        test_network(wandb.config)
     else:
         raise NotImplementedError("Only function task is supported for now")
 
-wandb.finish()
+    wandb.finish()
