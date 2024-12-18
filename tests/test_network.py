@@ -5,7 +5,7 @@ import torch.nn.functional as F
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from tests.utils import get_optimizer, get_scheduler, get_network_data
+from tests.utils import get_optimizer, get_scheduler, get_network_data, get_data_info
 from models.network import LogReg, MLP, VGG, vgg16_bn
 
 def test_network(config, seed=42):
@@ -31,7 +31,11 @@ def test_network(config, seed=42):
     wandb.run.name = f"{model}_{optimizer_name}_{config.learning_rate}"
 
     if model == 'logreg':
-        model = LogReg(input_dim=28 * 28, output_dim=10)
+        if config.dataset is None:
+            model = LogReg(input_dim=28 * 28, output_dim=10)
+        else:
+            input_dim, output_dim = get_data_info(config.dataset)
+            model = LogReg(input_dim=input_dim, output_dim=output_dim)
     elif model == 'mlp':
         model = MLP(input_dim=28 * 28, hidden_dim=1000, output_dim=10)
     elif model == 'vgg':
