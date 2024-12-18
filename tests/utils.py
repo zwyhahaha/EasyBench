@@ -15,9 +15,13 @@ def get_optimizer(optimizer_name, params, config):
     elif optimizer_name == 'Adam':
         optimizer = Adam(params, lr=learning_rate)
     elif optimizer_name == 'OSGM':
-        optimizer = OSGM(params, lr=learning_rate)
+        relax_coef = 1.0 if config.relax_coef is None else config.relax_coef
+        optimizer = OSGM(params, lr=learning_rate, relax_coef=relax_coef)
     elif optimizer_name == 'OSMM':
-        optimizer = OSMM(params, lr=learning_rate)
+        relax_coef = 1.0 if config.relax_coef is None else config.relax_coef
+        beta_lr = 1.0 if config.beta_lr is None else config.beta_lr
+        beta = 0.0 if config.beta is None else config.beta
+        optimizer = OSMM(params, lr=learning_rate, beta_lr=beta_lr, beta=beta, relax_coef=relax_coef)
     else:
         raise ValueError("Invalid optimizer name")
     return optimizer

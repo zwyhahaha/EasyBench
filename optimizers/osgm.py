@@ -14,12 +14,14 @@ class OSGM(Optimizer):
         stop_step: OptFloat = None,
         eps: float = 1e-08,
         weight_decay: float = 0.0,
+        relax_coef: float = 1.0,
     ):
         if not 0.0 <= lr:
             raise ValueError("Invalid learning rate: {}".format(lr))
         if not 0.0 <= eps:
             raise ValueError(f"Invalid epsilon value: {eps}")
-        defaults = dict(lr=lr,eps=eps,weight_decay=weight_decay,stop_step=stop_step)
+        defaults = dict(lr=lr,eps=eps,weight_decay=weight_decay,stop_step=stop_step,
+                        relax_coef=relax_coef)
         super(OSGM,self).__init__(params, defaults)
 
     @torch.no_grad()
@@ -75,7 +77,7 @@ class OSGM(Optimizer):
 
                     loss_new = closure()
 
-                    if loss_new > loss:
+                    if loss_new > group["relax_coef"] * loss:
                         p.data = pcopy
 
                     del pcopy

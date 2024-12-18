@@ -1,6 +1,6 @@
 program: sweep.py
 method: grid  # available methods: grid, random, bayes
-project: network_mlp_all_optimizers
+project: network_logreg_osmm_tune
 metric:
   name: train_loss
   goal: minimize
@@ -8,15 +8,21 @@ parameters:
   batch_size:
     value: 128
   epochs:
-    value: 100
+    value: 10
   task:
     value: 'network'
   model:
-    value: 'mlp'
+    value: 'logreg'
   optimizer:
-    values: ['OSGM'] # , 'SGD', 'OSMM', 'NAG', 'Adam', 
+    value: 'OSMM'
   learning_rate:
     values: [0.1,0.01,0.001]
+  relax_coef:
+    values: [1.0, 1.5, 2.0, 2.5, 3.0]
+  beta:
+    values: [0.0, 0.9]
+  beta_lr:
+    values: [0.1, 1.0, 10.0]
   scheduler:
     value: None
   lr_decay:

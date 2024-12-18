@@ -12,11 +12,12 @@ class OSMM(Optimizer):
         self,
         params: Params,
         lr: OptFloat = None,
-        beta_lr: OptFloat = 0.1,
+        beta_lr: OptFloat = 1.0,
         beta: float = 0.,
         eps: float = 1e-08,
         weight_decay: float = 0.0,
         stop_step: OptFloat = None,
+        relax_coef: float = 1.0,
     ):
         if not 0.0 <= lr:
             raise ValueError("Invalid learning rate: {}".format(lr))
@@ -24,7 +25,7 @@ class OSMM(Optimizer):
             raise ValueError(f"Invalid epsilon value: {eps}")
         defaults = dict(lr=lr,eps=eps,beta=torch.tensor(beta),
                         weight_decay=weight_decay,stop_step=stop_step,
-                        beta_lr=beta_lr)
+                        beta_lr=beta_lr, relax_coef=relax_coef)
         super(OSMM,self).__init__(params, defaults)
 
     @torch.no_grad()
@@ -88,7 +89,7 @@ class OSMM(Optimizer):
                         
                         gm = (grad * m).sum() / (prev_grad.norm() ** 2 + 1e-20) # gradient of momentum coef
                         state["Gm"] += gm ** 2 # Adagrad normalizer for momentum coef
-                        group["beta"] = group["beta"] - beta_lr * gm / (state["Gm"].add(eps).sqrt()) # adagrad preconditioner update
+                        group["beta"] = group["beta"] - beta_lr * lr * gm / (state["Gm"].add(eps).sqrt()) # adagrad preconditioner update
                         group["beta"].clamp_(-0.9995,0.9995)
                         # print(group["beta"].item())
                         state["beta_avg"] = state["beta_avg"]*(step-1)/step + group["beta"]/step
@@ -98,7 +99,7 @@ class OSMM(Optimizer):
 
                     loss_new = closure()
 
-                    if loss_new > 2 * loss:
+                    if loss_new > group["relax_coef"] * loss:
                         p.data = pcopy
 
                     state["m"] = p - pcopy

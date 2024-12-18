@@ -65,14 +65,15 @@ def test_network(config, seed=42):
             loss = F.cross_entropy(output, target)
             loss.backward()
             if optimizer_name in ['OSMM']:
-                
+                beta = optimizer.param_groups[0]['beta'].item()
+                beta_epoch += beta
+            if optimizer_name in ['OSMM','OSGM']: 
                 def closure():
                     next_output = model(next_data)
                     loss = F.cross_entropy(next_output, next_target)
                     return loss
                 optimizer.step(closure)
-                beta = optimizer.param_groups[0]['beta'].item()
-                beta_epoch += beta
+                
             else:
                 optimizer.step()
             train_loss += loss.item()

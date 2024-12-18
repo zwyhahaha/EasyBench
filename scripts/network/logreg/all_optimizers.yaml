@@ -14,7 +14,7 @@ parameters:
   model:
     value: 'logreg'
   optimizer:
-    values: ['OSMM', 'NAG', 'Adam', 'OSGM', 'SGD']
+    values: ['OSGM'] # , 'SGD', 'OSMM', 'NAG', 'Adam', 
   learning_rate:
     values: [0.1,0.01,0.001]
   scheduler:
