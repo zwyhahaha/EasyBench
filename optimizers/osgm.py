@@ -13,19 +13,21 @@ class OSGM(Optimizer):
         lr: OptFloat = None,
         stop_step: OptFloat = None,
         eps: float = 1e-08,
+        gr_eps: float = 1e-20,
         weight_decay: float = 0.0,
         relax_coef: float = 1.0,
+        dampening: float = 0.0,
     ):
         if not 0.0 <= lr:
             raise ValueError("Invalid learning rate: {}".format(lr))
         if not 0.0 <= eps:
             raise ValueError(f"Invalid epsilon value: {eps}")
         defaults = dict(lr=lr,eps=eps,weight_decay=weight_decay,stop_step=stop_step,
-                        relax_coef=relax_coef)
+                        relax_coef=relax_coef,gr_eps=gr_eps,dampening=dampening)
         super(OSGM,self).__init__(params, defaults)
 
     @torch.no_grad()
-    def step(self, closure: OptLossClosure = None) -> OptFloat:
+    def step(self, closure: OptLossClosure = None,restart=False) -> OptFloat:
         r"""Performs a single optimization step.
 
         Arguments:
@@ -58,6 +60,7 @@ class OSGM(Optimizer):
                     state["step"] += 1
                     prev_grad = state["prev_grad"]
                     eps = group["eps"]
+                    gr_eps = group["gr_eps"]
                     lr = group["lr"]
 
                     if group["stop_step"] is None:
@@ -67,13 +70,13 @@ class OSGM(Optimizer):
                         state["Q"] = torch.zeros_like(p)
                         state["G"] = torch.zeros_like(p)
                     else:
-                        gr = - prev_grad.mul(grad) / (prev_grad.norm() ** 2 + 1e-20) # gradient of preconditioner
+                        gr = - prev_grad.mul(grad) / (prev_grad.norm() ** 2 + gr_eps) # gradient of preconditioner
                         
                         state["G"].addcmul_(gr, gr, value=1) # Adagrad normalizer
                         state["Q"].addcdiv_(gr, state["G"].add(eps).sqrt(), value=-lr) # adagrad preconditioner update
                         
                     pcopy = p.detach().clone()
-                    p.addcmul_(state["Q"], grad, value=-1.0)
+                    p.addcmul_(state["Q"], grad, value=-(1-group["dampening"]))
 
                     loss_new = closure()
 

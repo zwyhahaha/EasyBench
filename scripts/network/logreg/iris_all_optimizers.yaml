@@ -6,7 +6,7 @@ metric:
   goal: minimize
 parameters:
   batch_size:
-    values: [16, 64]
+    values: [16,64,128]
   epochs:
     value: 50
   task:
@@ -16,9 +16,9 @@ parameters:
   dataset:
     value: 'LIBSVM_iris'
   optimizer:
-    values: ['OSMM', 'NAG', 'Adam', 'OSGM', 'SGD']
+    values: ['NAG', 'Adam', 'OSGM', 'SGD', 'OSMM']
   learning_rate:
-    values: [0.1,0.01,0.001]
+    values: [1.0,10.0]
   scheduler:
     value: None
   lr_decay:

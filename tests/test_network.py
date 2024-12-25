@@ -28,7 +28,7 @@ def test_network(config, seed=42):
         torch.device("cpu")
         torch.manual_seed(seed)
 
-    wandb.run.name = f"{model}_{optimizer_name}_{config.learning_rate}"
+    wandb.run.name = f"{optimizer_name}_{config.learning_rate}_seed_{seed}"
 
     if model == 'logreg':
         if not hasattr(config, 'dataset') or config.dataset is None:
@@ -48,11 +48,16 @@ def test_network(config, seed=42):
         model = model.cuda()
     
     train_loader, valid_loader = get_network_data(config)
+    # if hasattr(config, 'stop_step') and optimizer_name == 'OSMM': # here stop_step is the number of epochs
+    #     config.update({'stop_step': len(train_loader) * config.stop_step}, allow_val_change=True) # convert to number of steps
     optimizer = get_optimizer(optimizer_name, model.parameters(), config)
     scheduler = get_scheduler(optimizer, scheduler_name, lr_decay)
 
     next_data, next_target = None, None
+    restart = False
     for epoch in range(epochs):
+        if epoch % config.stop_step == 0:
+            restart = True
         model.train()
         train_loss = 0
         if optimizer_name in ['OSMM']:
@@ -71,13 +76,13 @@ def test_network(config, seed=42):
             if optimizer_name in ['OSMM']:
                 beta = optimizer.param_groups[0]['beta'].item()
                 beta_epoch += beta
-            if optimizer_name in ['OSMM','OSGM']: 
+            if optimizer_name in ['OSMM','OSGM']:
                 def closure():
                     next_output = model(next_data)
                     loss = F.cross_entropy(next_output, next_target)
                     return loss
-                optimizer.step(closure)
-                
+                optimizer.step(closure, restart)
+                restart = False
             else:
                 optimizer.step()
             train_loss += loss.item()

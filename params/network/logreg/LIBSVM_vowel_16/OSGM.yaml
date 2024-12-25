@@ -1,0 +1,5 @@
+learning_rate: 1.0
+scheduler: None
+lr_decay: 1.0
+relax_coef: 1.0
+gr_eps: 1e-5

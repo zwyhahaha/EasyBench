@@ -10,21 +10,32 @@ import numpy as np
 
 def get_optimizer(optimizer_name, params, config):
     learning_rate = config.learning_rate
+    weight_decay = config.weight_decay
 
     if optimizer_name == 'SGD':
-        optimizer = SGD(params, lr=learning_rate)
+        optimizer = SGD(params, lr=learning_rate, weight_decay=weight_decay)
     elif optimizer_name == 'NAG':
-        optimizer = SGD(params, lr=learning_rate, momentum=0.9, nesterov=True)
+        optimizer = SGD(params, lr=learning_rate, momentum=0.9, nesterov=True, weight_decay=weight_decay)
     elif optimizer_name == 'Adam':
-        optimizer = Adam(params, lr=learning_rate)
+        optimizer = Adam(params, lr=learning_rate, weight_decay=weight_decay)
     elif optimizer_name == 'OSGM':
-        relax_coef = 1.0 if not hasattr(config,'relax_coef') else config.relax_coef
-        optimizer = OSGM(params, lr=learning_rate, relax_coef=relax_coef)
+        relax_coef = 1.5 if not hasattr(config,'relax_coef') else config.relax_coef
+        gr_eps = 1e-8 if not hasattr(config,'gr_eps') else config.gr_eps
+        dampening = 0.0 if not hasattr(config,'dampening') else config.dampening
+        optimizer = OSGM(params, lr=learning_rate, relax_coef=relax_coef,gr_eps=gr_eps, weight_decay=weight_decay,
+                         dampening=dampening)
     elif optimizer_name == 'OSMM':
-        relax_coef = 1.0 if not hasattr(config,'relax_coef') else config.relax_coef
-        beta_lr = 1.0 if not hasattr(config,'beta_lr') else config.beta_lr
-        beta = 0.0 if not hasattr(config,'beta') else config.beta
-        optimizer = OSMM(params, lr=learning_rate, beta_lr=beta_lr, beta=beta, relax_coef=relax_coef)
+        relax_coef = 1.5 if not hasattr(config,'relax_coef') else config.relax_coef
+        beta_lr = 0.1 if not hasattr(config,'beta_lr') else config.beta_lr
+        beta = 0.9 if not hasattr(config,'beta') else config.beta
+        min_beta = -0.0005 if not hasattr(config,'min_beta') else config.min_beta
+        gr_eps = 1e-8 if not hasattr(config,'gr_eps') else config.gr_eps
+        stop_step = None if not hasattr(config,'stop_step') else config.stop_step
+        dampening = 0.0 if not hasattr(config,'dampening') else config.dampening
+        optimizer = OSMM(params, lr=learning_rate, beta_lr=beta_lr, beta=beta, 
+                         relax_coef=relax_coef, gr_eps=gr_eps, min_beta=min_beta,
+                         stop_step=stop_step, weight_decay=weight_decay,
+                         dampening=dampening)
     else:
         raise ValueError("Invalid optimizer name")
     return optimizer
@@ -58,7 +69,10 @@ def get_network_data(config):
         elif 'LIBSVM' in config.dataset:
 
             task = config.dataset.split('_')[1]
-            data_path = f"data/LIBSVM/{task}.scale"
+            if 'mnist' in config.dataset:
+                data_path = f"data/LIBSVM/{task}.scale.bz2"
+            else:
+                data_path = f"data/LIBSVM/{task}.scale"
             X, y = load_svmlight_file(data_path)
             X = X.toarray()
 
@@ -114,7 +128,10 @@ def get_data_info(dataset):
         output_dim = 10
     elif 'LIBSVM' in dataset:
         task = dataset.split('_')[1]
-        data_path = f"data/LIBSVM/{task}.scale"
+        if 'mnist' in dataset:
+            data_path = f"data/LIBSVM/{task}.scale.bz2"
+        else:
+            data_path = f"data/LIBSVM/{task}.scale"
         from sklearn.datasets import load_svmlight_file
         X, y = load_svmlight_file(data_path)
         input_dim = X.shape[1]

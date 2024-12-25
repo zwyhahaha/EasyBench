@@ -1,12 +1,12 @@
 program: sweep.py
 method: grid  # available methods: grid, random, bayes
-project: network_logreg_osmm_tune
+project: network_logreg_vehicle_osmm_tune
 metric:
   name: train_loss
   goal: minimize
 parameters:
   batch_size:
-    value: 128
+    values: [16,64,128]
   epochs:
     value: 10
   task:
@@ -14,17 +14,19 @@ parameters:
   model:
     value: 'logreg'
   dataset:
-    value: 'MNIST'
+    value: 'LIBSVM_vehicle'
   optimizer:
     value: 'OSMM'
   learning_rate:
-    values: [0.1,0.01,0.001]
+    value: 0.1
   relax_coef:
-    values: [1.0, 1.5, 2.0, 2.5, 3.0]
+    values: [1.5, 2.5]
   beta:
-    values: [0.0, 0.9]
+    value: 0.9
   beta_lr:
-    values: [0.1, 1.0, 10.0]
+    value: 0.1
+  gr_eps:
+    values: [1e-5, 1e-8, 1e-20]
   scheduler:
     value: None
   lr_decay:

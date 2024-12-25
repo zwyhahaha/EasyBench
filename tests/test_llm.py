@@ -21,16 +21,15 @@ import time
 import math
 import pickle
 from contextlib import nullcontext
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import numpy as np
 import torch
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.distributed import init_process_group, destroy_process_group
 
-from model import GPTConfig, GPT
-
-# Self-defined optimizers
-import torch_optimizer as optim
+from models.llm import GPTConfig, GPT
 # -----------------------------------------------------------------------------
 # default config values designed to train a gpt2 (124M) on OpenWebText
 # I/O
@@ -196,12 +195,7 @@ if block_size < model.config.block_size:
 model.to(device)
 
 # initialize a GradScaler. If enabled=False scaler is a no-op
-scaler = torch.cuda.amp.GradScaler(enabled=(dtype == 'float16'))
-
-# optimizer
-# for AdamW (default)
-# optimizer = model.configure_optimizers_bak(weight_decay, learning_rate, (beta1, beta2), device_type)
-# for general optimizers
+scaler = torch.amp.GradScaler('cuda', enabled=(dtype == 'float16'))
 optimizer = model.configure_optimizers_general(optimizer_type,weight_decay, learning_rate, (beta1, beta2), device_type)
 
 if init_from == 'resume':

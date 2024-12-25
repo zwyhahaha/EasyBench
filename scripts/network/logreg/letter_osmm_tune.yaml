@@ -1,24 +1,32 @@
 program: sweep.py
 method: grid  # available methods: grid, random, bayes
-project: network_logreg_vowel_all_optimizers
+project: network_logreg_letter_osmm_tune
 metric:
   name: train_loss
   goal: minimize
 parameters:
   batch_size:
-    values: [16, 64, 128]
+    values: [16,64,128]
   epochs:
-    value: 50
+    value: 10
   task:
     value: 'network'
   model:
     value: 'logreg'
   dataset:
-    value: 'LIBSVM_vowel'
+    value: 'LIBSVM_letter'
   optimizer:
-    values: ['NAG', 'Adam', 'OSGM', 'SGD','OSMM']
+    value: 'OSMM'
   learning_rate:
-    values: [1.0,10.0]
+    value: 0.1
+  relax_coef:
+    values: [1.5, 2.5]
+  beta:
+    value: 0.9
+  beta_lr:
+    value: 0.1
+  gr_eps:
+    values: [1e-5, 1e-8, 1e-20]
   scheduler:
     value: None
   lr_decay:
