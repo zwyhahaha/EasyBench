@@ -1,6 +1,6 @@
 program: sweep.py
 method: grid  # available methods: grid, random, bayes
-project: network_logreg_letter_osmm_tune
+project: network_logreg_letter_all_optimizers
 metric:
   name: train_loss
   goal: minimize
@@ -9,8 +9,6 @@ parameters:
     values: [64]
   epochs:
     value: 10
-  stop_step:
-    value: 100
   task:
     value: 'network'
   model:
@@ -18,24 +16,14 @@ parameters:
   dataset:
     value: 'LIBSVM_letter'
   optimizer:
-    value: 'OSMM'
+    values: ['NAG', 'Adam', 'SGD']
   learning_rate:
-    values: [1.0]
-  relax_coef:
-    value: 1.5
-  beta:
-    values: [0.9]
-  beta_lr:
-    values: [0.1]
-  gr_eps:
-    value: 1e-8
+    values: [1.0,10.0]
   scheduler:
-    value: 'ExponentialLR'
+    value: None
   lr_decay:
-    values: [0.99,0.9]
+    value: 1.0
   weight_decay:
     value: 0.0
-  dampening:
-    values: [0.0]
   seed:
     values: [0,1,2]

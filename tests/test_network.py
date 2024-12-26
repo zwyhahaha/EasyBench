@@ -56,7 +56,9 @@ def test_network(config, seed=42):
     next_data, next_target = None, None
     restart = False
     for epoch in range(epochs):
-        if epoch % config.stop_step == 0:
+        if not hasattr(config, 'stop_step'):
+            config.stop_step = epochs * 2
+        if optimizer_name in ["OSMM","OSGM"] and epoch % config.stop_step == 0:
             restart = True
         model.train()
         train_loss = 0

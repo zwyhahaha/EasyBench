@@ -24,8 +24,8 @@ task = args.task
 dataset = args.dataset
 epochs = args.epochs
 batch_size = args.batch_size
-optimizers = ['SGD', 'NAG', 'Adam', 'OSGM', 'OSMM']
-optimizers = ['OSMM']
+optimizers = ['SGD', 'NAG', 'Adam', 'OSMM']
+# optimizers = ['OSMM']
 
 class Config:
     def __init__(self, **entries):
