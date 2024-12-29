@@ -8,6 +8,8 @@ parameters:
   batch_size:
     value: 128
   epochs:
+    value: 50
+  stop_step:
     value: 100
   task:
     value: 'network'
@@ -16,10 +18,14 @@ parameters:
   dataset:
     value: 'MNIST'
   optimizer:
-    values: ['OSGM'] # , 'SGD', 'OSMM', 'NAG', 'Adam', 
+    values: ['SGD', 'NAG', 'Adam']
   learning_rate:
     values: [0.1,0.01,0.001]
   scheduler:
     value: None
   lr_decay:
     value: 1.0
+  weight_decay:
+    value: 1e-4
+  seed:
+    values: [0,1,2]

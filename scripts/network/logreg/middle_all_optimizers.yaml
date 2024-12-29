@@ -1,14 +1,14 @@
 program: sweep.py
 method: grid  # available methods: grid, random, bayes
-project: network_logreg_middle_all_optimizers
+project: network_logreg_middle_all_optimizers_full
 metric:
   name: train_loss
   goal: minimize
 parameters:
   batch_size:
-    values: [16]
+    values: [5000]
   epochs:
-    value: 40
+    value: 20
   stop_step:
     value: 100
   task:
@@ -18,9 +18,9 @@ parameters:
   dataset:
     values: ['LIBSVM_satimage','LIBSVM_segment']
   optimizer:
-    values: ['NAG', 'Adam', 'SGD', 'OSMM']
+    values: ['NAG', 'Adam', 'SGD', 'OSMM','OSMM2']
   learning_rate:
-    values: [0.01,0.1,1.0]
+    values: [10]
   scheduler:
     value: None
   lr_decay:
@@ -28,4 +28,4 @@ parameters:
   weight_decay:
     value: 0.0
   seed:
-    values: [0,1,2]
+    values: [0]

@@ -23,7 +23,10 @@ def test_network(config, seed=42):
     if use_cuda:
         torch.device("cuda")
         torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
         torch.backends.cudnn.enabled = True
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
     else:
         torch.device("cpu")
         torch.manual_seed(seed)
@@ -47,7 +50,7 @@ def test_network(config, seed=42):
     if use_cuda:
         model = model.cuda()
     
-    train_loader, valid_loader = get_network_data(config)
+    train_loader, valid_loader = get_network_data(config,seed)
     # if hasattr(config, 'stop_step') and optimizer_name == 'OSMM': # here stop_step is the number of epochs
     #     config.update({'stop_step': len(train_loader) * config.stop_step}, allow_val_change=True) # convert to number of steps
     optimizer = get_optimizer(optimizer_name, model.parameters(), config)
@@ -58,11 +61,11 @@ def test_network(config, seed=42):
     for epoch in range(epochs):
         if not hasattr(config, 'stop_step'):
             config.stop_step = epochs * 2
-        if optimizer_name in ["OSMM","OSGM"] and epoch % config.stop_step == 0:
+        if optimizer_name in ["OSMM","OSGM","OSMM2"] and epoch % config.stop_step == 0:
             restart = True
         model.train()
         train_loss = 0
-        if optimizer_name in ['OSMM']:
+        if optimizer_name in ['OSMM',"OSMM2"]:
             beta_epoch = 0
         for data, target in train_loader:
             data, target = Variable(data), Variable(target)
@@ -75,10 +78,10 @@ def test_network(config, seed=42):
             output = model(data)
             loss = F.cross_entropy(output, target)
             loss.backward()
-            if optimizer_name in ['OSMM']:
+            if optimizer_name in ['OSMM',"OSMM2"]:
                 beta = optimizer.param_groups[0]['beta'].item()
                 beta_epoch += beta
-            if optimizer_name in ['OSMM','OSGM']:
+            if optimizer_name in ['OSMM','OSGM',"OSMM2"]:
                 def closure():
                     next_output = model(next_data)
                     loss = F.cross_entropy(next_output, next_target)
@@ -102,7 +105,7 @@ def test_network(config, seed=42):
                 output = model(data)
                 valid_loss += F.cross_entropy(output, target, reduction='sum').item()
         valid_loss /= len(valid_loader.dataset)
-        if optimizer_name in ['OSMM']:
+        if optimizer_name in ['OSMM',"OSMM2"]:
             wandb.log({'beta': beta_epoch/len(train_loader),
                        'train_loss': train_loss,
                        'valid_loss': valid_loss})

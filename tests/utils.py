@@ -1,5 +1,5 @@
 from torch.optim import SGD, Adam
-from optimizers import OSGM, OSMM
+from optimizers import OSGM, OSMM, OSMM2
 from torch.optim.lr_scheduler import ExponentialLR
 import torch
 from torch.utils.data import DataLoader, TensorDataset
@@ -7,6 +7,14 @@ from torchvision import datasets, transforms
 from sklearn.datasets import load_svmlight_file
 from sklearn.model_selection import train_test_split
 import numpy as np
+import random
+
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
 
 def get_optimizer(optimizer_name, params, config):
     learning_rate = config.learning_rate
@@ -36,6 +44,19 @@ def get_optimizer(optimizer_name, params, config):
                          relax_coef=relax_coef, gr_eps=gr_eps, min_beta=min_beta,
                          stop_step=stop_step, weight_decay=weight_decay,
                          dampening=dampening)
+    elif optimizer_name == 'OSMM2':
+        relax_coef = 1.5 if not hasattr(config,'relax_coef') else config.relax_coef
+        beta_lr = 0.1 if not hasattr(config,'beta_lr') else config.beta_lr
+        beta = 0.9 if not hasattr(config,'beta') else config.beta
+        min_beta = -0.0005 if not hasattr(config,'min_beta') else config.min_beta
+        gr_eps = 1e-8 if not hasattr(config,'gr_eps') else config.gr_eps
+        stop_step = None if not hasattr(config,'stop_step') else config.stop_step
+        dampening = 0.0 if not hasattr(config,'dampening') else config.dampening
+        adagrad = True if not hasattr(config,'adagrad') else config.adagrad
+        optimizer = OSMM2(params, lr=learning_rate, beta_lr=beta_lr, beta=beta, 
+                         relax_coef=relax_coef, gr_eps=gr_eps, min_beta=min_beta,
+                         stop_step=stop_step, weight_decay=weight_decay,
+                         dampening=dampening, adagrad=adagrad)
     else:
         raise ValueError("Invalid optimizer name")
     return optimizer
@@ -47,7 +68,8 @@ def get_scheduler(optimizer, scheduler_name, lr_decay):
         scheduler = None
     return scheduler
 
-def get_network_data(config):
+def get_network_data(config,seed):
+    set_seed(seed)
     model = config.model
     batch_size = config.batch_size
     if model == 'logreg' or model == 'mlp':
@@ -84,7 +106,7 @@ def get_network_data(config):
             X_tensor = torch.tensor(X, dtype=torch.float32)
             y_tensor = torch.tensor(y, dtype=torch.long)
             y_tensor = convert_to_one_hot(y_tensor, n_classes)
-            X_train, X_valid, y_train, y_valid = train_test_split(X_tensor, y_tensor, test_size=0.1)
+            X_train, X_valid, y_train, y_valid = train_test_split(X_tensor, y_tensor, test_size=0.1,random_state=seed)
 
             train_dataset = TensorDataset(X_train, y_train)
             train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)

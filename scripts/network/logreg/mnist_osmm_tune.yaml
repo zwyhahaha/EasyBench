@@ -1,6 +1,6 @@
 program: sweep.py
 method: grid  # available methods: grid, random, bayes
-project: network_logreg_mnist_osmm_dampening
+project: network_logreg_mnist_osmm2_dampening
 metric:
   name: train_loss
   goal: minimize
@@ -10,7 +10,7 @@ parameters:
   epochs:
     value: 10
   stop_step:
-    value: 20
+    value: 30
   task:
     value: 'network'
   model:
@@ -18,7 +18,7 @@ parameters:
   dataset:
     value: 'LIBSVM_mnist' # MNIST
   optimizer:
-    value: 'OSMM'
+    values: ['OSMM2',]
   learning_rate:
     values: [0.01]
   relax_coef:
@@ -36,7 +36,7 @@ parameters:
   seed:
     values: [0,1,2]
   weight_decay:
-    values: [0.0, 1e-4]
+    values: [0.0]
   dampening:
-    values: [0, 0.1, 0.3, 0.5, 0.9]
+    values: [0,0.1,0.5,0.9]
   

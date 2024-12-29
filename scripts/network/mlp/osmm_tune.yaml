@@ -1,32 +1,32 @@
 program: sweep.py
 method: grid  # available methods: grid, random, bayes
-project: network_logreg_middle_osmm2
+project: network_mlp_mnist_osmm_tune
 metric:
   name: train_loss
   goal: minimize
 parameters:
   batch_size:
-    values: [16]
+    value: 128
   epochs:
-    value: 20
+    value: 50
   stop_step:
     value: 100
   task:
     value: 'network'
   model:
-    value: 'logreg'
+    value: 'mlp'
   dataset:
-    values: ['LIBSVM_segment']
+    value: 'MNIST'
   optimizer:
-    values: ['OSMM2']
+    values: ['OSMM','OSMM2']
   learning_rate:
-    values: [1.0]
+    values: [0.1,0.01,0.001]
   relax_coef:
     value: 1.5
   beta:
     values: [0.9]
   beta_lr:
-    values: [0.1]
+    values: [0.1,1.0]
   gr_eps:
     value: 1e-8
   scheduler:
@@ -38,6 +38,6 @@ parameters:
   dampening:
     values: [0.0]
   adagrad:
-    values: [False]
+    values: [True]
   seed:
     values: [0,1,2]

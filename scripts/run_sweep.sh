@@ -7,8 +7,10 @@
 # WANDB_API_KEY=d2d00dff74b3ad422b1b715587ed1a2089c640ce wandb sweep scripts/network/logreg/letter_osmm_tune.yaml
 # WANDB_API_KEY=d2d00dff74b3ad422b1b715587ed1a2089c640ce wandb sweep scripts/network/logreg/middle_osmm_tune.yaml
 # WANDB_API_KEY=d2d00dff74b3ad422b1b715587ed1a2089c640ce wandb sweep scripts/network/logreg/middle_all_optimizers.yaml
+# WANDB_API_KEY=d2d00dff74b3ad422b1b715587ed1a2089c640ce wandb sweep scripts/network/mlp/all_optimizers.yaml
+# WANDB_API_KEY=d2d00dff74b3ad422b1b715587ed1a2089c640ce wandb sweep scripts/network/mlp/osmm_tune.yaml
+# WANDB_API_KEY=d2d00dff74b3ad422b1b715587ed1a2089c640ce wandb sweep scripts/network/logreg/middle_all_optimizers.yaml
 for i in {0..7}; do
-    CUDA_VISIBLE_DEVICES=$(i) WANDB_API_KEY=d2d00dff74b3ad422b1b715587ed1a2089c640ce wandb agent wanyuzhang1013-shanghai-university-of-finance-and-economics/network_logreg_middle_osmm_dampening/qlytos4h &
-    # CUDA_VISIBLE_DEVICES=$(i) WANDB_API_KEY=d2d00dff74b3ad422b1b715587ed1a2089c640ce wandb agent wanyuzhang1013-shanghai-university-of-finance-and-economics/network_logreg_mnist_osmm_tune/75bz9sp0 &
+    CUDA_VISIBLE_DEVICES=$(i) WANDB_API_KEY=d2d00dff74b3ad422b1b715587ed1a2089c640ce wandb agent wanyuzhang1013-shanghai-university-of-finance-and-economics/network_logreg_middle_all_optimizers_full/z16nk0u6 &
 done
 wait

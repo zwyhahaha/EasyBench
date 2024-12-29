@@ -11,7 +11,7 @@ task = config.task
 optimizer_name = config.optimizer
 
 assert task in ['function', 'network', 'llm']
-assert optimizer_name in ['SGD', 'NAG', 'Adam', 'OSGM', 'OSMM']
+assert optimizer_name in ['SGD', 'NAG', 'Adam', 'OSGM', 'OSMM', 'OSMM2']
 
 if task == 'function':
     from tests.test_function import test_function
