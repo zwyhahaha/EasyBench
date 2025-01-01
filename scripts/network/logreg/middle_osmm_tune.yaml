@@ -1,6 +1,6 @@
 program: sweep.py
 method: grid  # available methods: grid, random, bayes
-project: network_logreg_middle_osmm2
+project: network_logreg_middle_osmm_overparam
 metric:
   name: train_loss
   goal: minimize
@@ -41,3 +41,7 @@ parameters:
     values: [False]
   seed:
     values: [0,1,2]
+  overparam:
+    value: True
+  target_samples:
+    value: 2000

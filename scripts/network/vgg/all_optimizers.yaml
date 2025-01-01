@@ -1,6 +1,6 @@
 program: sweep.py
 method: grid  # available methods: grid, random, bayes
-project: network_mlp_all_optimizers
+project: network_vgg_all_optimizers
 metric:
   name: train_loss
   goal: minimize
@@ -14,13 +14,17 @@ parameters:
   task:
     value: 'network'
   model:
-    value: 'mlp'
+    value: 'vgg'
   dataset:
-    value: 'MNIST'
+    value: 'CIFAR10'
   optimizer:
-    values: ['AdamW']
+    values: ['OSMM2',]
   learning_rate:
-    values: [0.001]
+    values: [0.01]
+  beta:
+    values: [0.0]
+  beta_lr:
+    values: [1,0.1]
   scheduler:
     value: None
   lr_decay:

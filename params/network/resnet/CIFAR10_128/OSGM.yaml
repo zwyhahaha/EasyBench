@@ -1,0 +1,4 @@
+learning_rate: 0.001
+scheduler: None
+lr_decay: 1.0
+beta_lr: 0.1

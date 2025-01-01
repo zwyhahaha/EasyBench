@@ -59,7 +59,7 @@ class OSMM(Optimizer):
                 # State Initialization
                 if len(state) == 0:
                     state["step"] = 0
-                    state["beta_avg"] = torch.tensor(group["beta"])
+                    state["beta_avg"] = group["beta"]
                     state["Gm"] = 0
                     state["m"] = torch.zeros_like(p)
                     state["Q"] = torch.zeros_like(p)

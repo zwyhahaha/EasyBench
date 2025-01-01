@@ -6,17 +6,20 @@ run all optimizers with the best hyperparameters
 import wandb
 import yaml
 import argparse
+from tests.utils import set_seed
 
 parser = argparse.ArgumentParser(description='Train the model with the best hyperparameters.')
 parser.add_argument('--model', type=str, default="logreg", help='The model to use for training')
 parser.add_argument('--task', type=str, default="network", help='The task to perform')
-parser.add_argument('--dataset', type=str, default="LIBSVM_vowel", help='dataset')
+parser.add_argument('--dataset', type=str, default="LIBSVM_segment", help='dataset')
 parser.add_argument('--epochs', type=int, default=50, help='Number of epochs for training')
-parser.add_argument('--batch_size', type=int, default=128, help='Number of batches for training')
-parser.add_argument('--weight_decay', type=float, default=1e-4, help='Weight decay for the optimizer')
+parser.add_argument('--batch_size', type=int, default=16, help='Number of batches for training')
+parser.add_argument('--weight_decay', type=float, default=0, help='Weight decay for the optimizer')
 parser.add_argument('--seed', type=int, default=None)
 parser.add_argument('--scheduler', type=str, default=None) # ExponentialLR
 parser.add_argument('--lr_decay', type=float, default=1.0)
+parser.add_argument('--overparam', action='store_true', help='Flag to indicate if the model is overparameterized')
+parser.add_argument('--target_samples', type=int, default=2000)
 args = parser.parse_args()
 
 model = args.model
@@ -25,12 +28,12 @@ dataset = args.dataset
 epochs = args.epochs
 batch_size = args.batch_size
 optimizers = ['SGD', 'NAG', 'Adam', 'OSMM2', 'OSMM']
-# optimizers = ['OSMM', 'OSMM2']
+optimizers = ['OSMM2']
 
 class Config:
     def __init__(self, **entries):
         self.__dict__.update(entries)
-        
+
 for optimizer_name in optimizers:
     if args.seed is None:
         seeds = range(1)
@@ -38,7 +41,9 @@ for optimizer_name in optimizers:
         seeds = [args.seed]
     
     for seed in seeds:
-        wandb.init(project=f'run_seeds_{model}_{task}_{dataset}_weight_decay_{args.weight_decay}')
+        set_seed(seed)
+        # wandb.init(project=f'run_seeds_{model}_{task}_{dataset}_weight_decay_{args.weight_decay}')
+        wandb.init(project=f'network_speedup_test')
 
         if dataset is not None:
             config_path = f'params/{task}/{model}/{dataset}_{batch_size}/{optimizer_name}.yaml'
@@ -53,8 +58,6 @@ for optimizer_name in optimizers:
 
         args.optimizer = optimizer_name
         args.seed = seed
-
-        args.stop_step = 50
 
         config.update(vars(args))
 

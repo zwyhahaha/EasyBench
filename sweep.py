@@ -10,8 +10,8 @@ config = wandb.config
 task = config.task
 optimizer_name = config.optimizer
 
-assert task in ['function', 'network', 'llm']
-assert optimizer_name in ['SGD', 'NAG', 'Adam', 'OSGM', 'OSMM', 'OSMM2']
+# warmup_config = config.copy()
+# warmup_config.epochs = 1
 
 if task == 'function':
     from tests.test_function import test_function

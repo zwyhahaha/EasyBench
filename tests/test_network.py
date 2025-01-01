@@ -5,75 +5,54 @@ import torch.nn.functional as F
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from tests.utils import get_optimizer, get_scheduler, get_network_data, get_data_info
-from models.network import LogReg, MLP, VGG, vgg16_bn
+from tests.utils import get_optimizer, get_scheduler, get_network_data, get_data_info, set_seed
+from models.network import LogReg, MLP, VGG, vgg16_bn, ResNet18
 
-def test_network(config, seed=42):
+def test_network(config, seed=42, warmup=False):
     epochs = config.epochs
     task = config.task # ['function', 'network', 'llm']
-    model = config.model # {'function': ['rosenbrock', 'rastrigin', 'least_squares'], 'network': ['mlp'], 'llm': ['llm']}
-    optimizer_name = config.optimizer # 'SGD', 'NAG', 'Adam', 'OSGM', 'OSMM'
-    scheduler_name = config.scheduler # 'None', 'ExponentialLR'
+    model = config.model # {'function': ['rosenbrock', 'rastrigin', 'least_squares'], 'network': ['mlp','vgg','resnet'], 'llm': ['llm']}
+    optimizer_name = config.optimizer
+    scheduler_name = config.scheduler
     lr_decay = config.lr_decay
 
     assert task == 'network'
-    assert model in ['logreg', 'mlp', 'vgg']
 
     use_cuda = torch.cuda.is_available()
-    if use_cuda:
-        torch.device("cuda")
-        torch.cuda.manual_seed(seed)
-        torch.cuda.manual_seed_all(seed)
-        torch.backends.cudnn.enabled = True
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
-    else:
-        torch.device("cpu")
-        torch.manual_seed(seed)
+    device = torch.device("cuda" if use_cuda else "cpu")
+    set_seed(seed)
 
     wandb.run.name = f"{optimizer_name}_{config.learning_rate}_seed_{seed}"
 
     if model == 'logreg':
-        if not hasattr(config, 'dataset') or config.dataset is None:
-            model = LogReg(input_dim=28 * 28, output_dim=10)
-        else:
-            input_dim, output_dim = get_data_info(config.dataset)
-            model = LogReg(input_dim=input_dim, output_dim=output_dim)
+        input_dim, output_dim = get_data_info(config)
+        model = LogReg(input_dim=input_dim, output_dim=output_dim)
     elif model == 'mlp':
-        model = MLP(input_dim=28 * 28, hidden_dim=1000, output_dim=10)
+        input_dim, output_dim = get_data_info(config)
+        model = MLP(input_dim=input_dim, hidden_dim=1000, output_dim=output_dim)
     elif model == 'vgg':
         model = vgg16_bn()
         model.features = torch.nn.DataParallel(model.features)
+    elif model == 'resnet':
+        model = ResNet18()
     else:
         raise Exception('Unknown model: {}'.format(model))
 
-    if use_cuda:
-        model = model.cuda()
+    model = model.to(device)
     
-    train_loader, valid_loader = get_network_data(config,seed)
-    # if hasattr(config, 'stop_step') and optimizer_name == 'OSMM': # here stop_step is the number of epochs
-    #     config.update({'stop_step': len(train_loader) * config.stop_step}, allow_val_change=True) # convert to number of steps
+    train_loader, valid_loader = get_network_data(config, seed)
     optimizer = get_optimizer(optimizer_name, model.parameters(), config)
     scheduler = get_scheduler(optimizer, scheduler_name, lr_decay)
 
-    next_data, next_target = None, None
-    restart = False
     for epoch in range(epochs):
-        if not hasattr(config, 'stop_step'):
-            config.stop_step = epochs * 2
-        if optimizer_name in ["OSMM","OSGM","OSMM2"] and epoch % config.stop_step == 0:
-            restart = True
+
         model.train()
         train_loss = 0
+        train_acc = 0
         if optimizer_name in ['OSMM',"OSMM2"]:
             beta_epoch = 0
         for data, target in train_loader:
-            data, target = Variable(data), Variable(target)
-            next_data, next_target = next(iter(train_loader))
-            next_data, next_target = Variable(next_data), Variable(next_target)
-            if use_cuda:
-                data, target = data.cuda(), target.cuda()
-                next_data, next_target = next_data.cuda(), next_target.cuda()
+            data, target = data.to(device), target.to(device)
             optimizer.zero_grad()
             output = model(data)
             loss = F.cross_entropy(output, target)
@@ -83,32 +62,45 @@ def test_network(config, seed=42):
                 beta_epoch += beta
             if optimizer_name in ['OSMM','OSGM',"OSMM2"]:
                 def closure():
-                    next_output = model(next_data)
-                    loss = F.cross_entropy(next_output, next_target)
+                    loss = F.cross_entropy(output, target)
                     return loss
-                optimizer.step(closure, restart)
-                restart = False
+                optimizer.step(closure)
             else:
                 optimizer.step()
             train_loss += loss.item()
+            acc = (output.argmax(dim=1) == target).float().mean()
+            train_acc += acc
+
+            if torch.isnan(loss):
+                return
+        
         if scheduler is not None:
             scheduler.step()
-        train_loss /= len(train_loader.dataset)
+        train_loss /= len(train_loader)
+        train_acc /= len(train_loader)
         
         model.eval()
         valid_loss = 0
-        for data, target in valid_loader:
-            with torch.no_grad():
-                data, target = Variable(data), Variable(target)
-                if use_cuda:
-                    data, target = data.cuda(), target.cuda()
+        valid_acc = 0
+        with torch.no_grad():
+            for data, target in valid_loader:
+                data, target = data.to(device), target.to(device)
                 output = model(data)
                 valid_loss += F.cross_entropy(output, target, reduction='sum').item()
+                acc = (output.argmax(dim=1) == target).float().mean()
+                valid_acc += acc
         valid_loss /= len(valid_loader.dataset)
-        if optimizer_name in ['OSMM',"OSMM2"]:
-            wandb.log({'beta': beta_epoch/len(train_loader),
-                       'train_loss': train_loss,
-                       'valid_loss': valid_loss})
-        else:
-            wandb.log({'train_loss': train_loss,
-                    'valid_loss': valid_loss})
+        valid_acc /= len(valid_loader)
+
+        if warmup is False:
+            if optimizer_name in ['OSMM',"OSMM2"]:
+                wandb.log({'beta': beta_epoch/len(train_loader),
+                        'train_loss': train_loss,
+                        'valid_loss': valid_loss,
+                        'train_acc': train_acc,
+                        'valid_acc': valid_acc})
+            else:
+                wandb.log({'train_loss': train_loss,
+                        'valid_loss': valid_loss,
+                        'train_acc': train_acc,
+                        'valid_acc': valid_acc})

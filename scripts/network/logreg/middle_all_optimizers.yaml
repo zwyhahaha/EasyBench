@@ -1,12 +1,12 @@
 program: sweep.py
 method: grid  # available methods: grid, random, bayes
-project: network_logreg_middle_all_optimizers_full
+project: network_logreg_segment_overparam_ratio_test
 metric:
   name: train_loss
   goal: minimize
 parameters:
   batch_size:
-    values: [5000]
+    values: [4]
   epochs:
     value: 20
   stop_step:
@@ -16,11 +16,11 @@ parameters:
   model:
     value: 'logreg'
   dataset:
-    values: ['LIBSVM_satimage','LIBSVM_segment']
+    values: ['LIBSVM_satimage']
   optimizer:
-    values: ['NAG', 'Adam', 'SGD', 'OSMM','OSMM2']
+    values: ['NAG', ] # 'Adam', 'SGD', 'OSMM','OSMM2'
   learning_rate:
-    values: [10]
+    values: [1.0, 10.0]
   scheduler:
     value: None
   lr_decay:
@@ -28,4 +28,10 @@ parameters:
   weight_decay:
     value: 0.0
   seed:
-    values: [0]
+    values: [0,1,2]
+  overparam:
+    value: True
+  target_samples:
+    value: 2000
+  reduction_ratio:
+    values: [0.8, 0.9]
