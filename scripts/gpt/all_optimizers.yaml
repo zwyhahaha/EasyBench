@@ -1,26 +1,24 @@
 program: sweep.py
 method: grid  # available methods: grid, random, bayes
-project: network_vgg_all_optimizers
+project: gpt_all_optimizers
 metric:
   name: train_loss
   goal: minimize
 parameters:
-  batch_size:
-    value: 128
   epochs:
     value: 50
   stop_step:
     value: 100
   task:
-    value: 'network'
+    value: 'gpt'
   model:
-    value: 'vgg'
+    value: 'gpt'
   dataset:
-    value: 'CIFAR10'
+    value: None
   optimizer:
-    values: ['OSMM2',]
+    values: ['AdamW'] # 'OSMM2','OSMM', 'Adam', 'SGD', 'NAG'
   learning_rate:
-    values: [0.001]
+    values: [0.001,]
   beta:
     values: [0.0]
   beta_lr:
@@ -30,6 +28,6 @@ parameters:
   lr_decay:
     value: 1.0
   weight_decay:
-    value: 1e-4
+    value: 1e-1
   seed:
     values: [0,1,2]

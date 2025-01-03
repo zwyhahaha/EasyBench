@@ -19,7 +19,10 @@ if task == 'function':
 elif task == 'network':
     from tests.test_network import test_network
     test_network(config,config.seed)
+elif task == 'gpt':
+        from tests.test_gpt import test_gpt
+        test_gpt(wandb.config, config.seed)
 else:
-    raise NotImplementedError("Only function task is supported for now")
+    raise NotImplementedError(f"task {task} is supported for now")
 
 wandb.finish()

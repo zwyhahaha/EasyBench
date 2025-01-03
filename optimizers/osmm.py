@@ -103,17 +103,23 @@ class OSMM(Optimizer):
                         group["beta"].clamp_(min_beta,0.9995)
                         state["beta_avg"] = state["beta_avg"]*(step-1)/step + group["beta"]/step
 
-                    pcopy = p.data.clone()
-                    p.addcmul_(state["Q"], grad, value=-(1-group["dampening"])).add_(group["beta"] * m)
+                    if closure is not None:
+                        pcopy = p.data.clone()
+                        p.add_(-(1-group["dampening"])*state["Q"]*grad).add_(group["beta"] * m)
 
-                    loss_new = closure()
+                        loss_new = closure()
 
-                    if loss_new > group["relax_coef"] * loss:
-                        p.data = pcopy
+                        if loss_new > group["relax_coef"] * loss:
+                            p.data = pcopy
 
-                    state["m"] = p - pcopy
+                        state["m"] = p.data - pcopy
 
-                    del pcopy
+                        del pcopy
+                    else:
+                        pcopy = p.data.clone()
+                        p.add_(-(1-group["dampening"])*state["Q"]*grad).add_(group["beta"] * m)
+                        state["m"] = p.data - pcopy
+                        del pcopy
 
                 state["prev_grad"] = grad.clone()
 

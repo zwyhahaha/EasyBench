@@ -61,7 +61,7 @@ class OSMM2(Optimizer):
                 # State Initialization
                 if len(state) == 0:
                     state["step"] = 0
-                    state["beta_avg"] = torch.tensor(group["beta"])
+                    state["beta_avg"] = group["beta"]
                     state["m"] = torch.zeros_like(p)
                     state["Q"] = 0
                     state["Q_avg"] = 0
@@ -112,18 +112,24 @@ class OSMM2(Optimizer):
                             group["beta"] = group["beta"] - beta_lr * lr * gm / step
                         group["beta"].clamp_(min_beta,0.9995)
                         state["beta_avg"] = state["beta_avg"]*(step-1)/step + group["beta"]/step
+                        
+                    if closure is not None:
+                        pcopy = p.data.clone()
+                        p.add_(-(1-group["dampening"])*state["Q"]*grad).add_(group["beta"] * m)
 
-                    pcopy = p.data.clone()
-                    p.add_(-(1-group["dampening"])*state["Q"]*grad).add_(group["beta"] * m)
+                        loss_new = closure()
 
-                    loss_new = closure()
+                        if loss_new > group["relax_coef"] * loss:
+                            p.data = pcopy
 
-                    if loss_new > group["relax_coef"] * loss:
-                        p.data = pcopy
+                        state["m"] = p.data - pcopy
 
-                    state["m"] = p - pcopy
-
-                    del pcopy
+                        del pcopy
+                    else:
+                        pcopy = p.data.clone()
+                        p.add_(-(1-group["dampening"])*state["Q"]*grad).add_(group["beta"] * m)
+                        state["m"] = p.data - pcopy
+                        del pcopy
 
                 state["prev_grad"] = grad.clone()
 

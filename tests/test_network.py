@@ -1,5 +1,6 @@
 import wandb
 import torch
+import numpy as np
 from torch.autograd import Variable
 import torch.nn.functional as F
 import os
@@ -44,6 +45,7 @@ def test_network(config, seed=42, warmup=False):
     optimizer = get_optimizer(optimizer_name, model.parameters(), config)
     scheduler = get_scheduler(optimizer, scheduler_name, lr_decay)
 
+    next_data, next_target = None, None
     for epoch in range(epochs):
 
         model.train()
@@ -61,17 +63,39 @@ def test_network(config, seed=42, warmup=False):
                 beta = optimizer.param_groups[0]['beta'].item()
                 beta_epoch += beta
             if optimizer_name in ['OSMM','OSGM',"OSMM2"]:
-                def closure():
-                    loss = F.cross_entropy(output, target)
-                    return loss
-                optimizer.step(closure)
+                # next_data, next_target = next(iter(train_loader))
+                # next_data, next_target = next_data.to(device), next_target.to(device)
+                # def closure():
+                #     next_output = model(next_data)
+                #     loss = F.cross_entropy(next_output, next_target)
+                #     return loss
+
+                # def closure():
+                #     loss = F.cross_entropy(output, target)
+                #     return loss
+                # optimizer.step(closure)
+
+                optimizer.step()
             else:
                 optimizer.step()
             train_loss += loss.item()
-            acc = (output.argmax(dim=1) == target).float().mean()
-            train_acc += acc
+            if config.dataset == 'CIFAR10':
+                acc = (output.argmax(dim=1) == target).float().mean()
+                train_acc += acc
 
             if torch.isnan(loss):
+                print('Loss is nan')
+                if optimizer_name in ['OSMM', 'OSMM2']:
+                    wandb.log({'beta': np.nan,
+                            'train_loss': np.nan,
+                            'valid_loss': np.nan,
+                            'train_acc': np.nan,})
+                else:
+                    wandb.log({'train_loss': np.nan,
+                            'valid_loss': np.nan,
+                            'train_acc': np.nan,
+                            'valid_acc': np.nan})
+                wandb.finish()
                 return
         
         if scheduler is not None:
@@ -87,8 +111,9 @@ def test_network(config, seed=42, warmup=False):
                 data, target = data.to(device), target.to(device)
                 output = model(data)
                 valid_loss += F.cross_entropy(output, target, reduction='sum').item()
-                acc = (output.argmax(dim=1) == target).float().mean()
-                valid_acc += acc
+                if config.dataset == 'CIFAR10':
+                    acc = (output.argmax(dim=1) == target).float().mean()
+                    valid_acc += acc
         valid_loss /= len(valid_loader.dataset)
         valid_acc /= len(valid_loader)
 

@@ -1,6 +1,6 @@
 program: sweep.py
 method: grid  # available methods: grid, random, bayes
-project: network_vgg_all_optimizers
+project: network_vgg_osmm_tune_wo_next
 metric:
   name: train_loss
   goal: minimize
@@ -18,18 +18,26 @@ parameters:
   dataset:
     value: 'CIFAR10'
   optimizer:
-    values: ['OSMM2',]
+    values: ['OSMM2','OSMM']
   learning_rate:
-    values: [0.001]
+    values: [0.0001]
+  relax_coef:
+    value: 1.5
   beta:
-    values: [0.0]
+    values: [0.9]
   beta_lr:
-    values: [0.1]
+    values: [0.1,10.0]
+  gr_eps:
+    value: 1e-8
   scheduler:
     value: None
   lr_decay:
     value: 1.0
   weight_decay:
     value: 1e-4
+  dampening:
+    values: [0.0]
+  adagrad:
+    values: [True]
   seed:
     values: [0,1,2]
