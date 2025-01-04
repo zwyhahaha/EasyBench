@@ -9,3 +9,6 @@ run.py
 logs/
 cifar10/
 data/
+tests/__pycache__/
+optimizers/__pycache__/
+models/__pycache__/

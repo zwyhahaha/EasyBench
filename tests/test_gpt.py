@@ -44,15 +44,30 @@ def test_gpt(config, seed=42, warmup=False):
         Y.append(seq[i+context_length])
     X = torch.tensor(X, dtype=torch.long)
     Y = torch.tensor(Y, dtype=torch.long)
-
     
     optimizer = get_optimizer(optimizer_name, model.parameters(), config)
 
     # train the GPT for some number of iterations
     for i in range(epochs):
-        logits = model(X)
-        loss = F.cross_entropy(logits, Y)
+
+        def closure():
+            logits = model(X)
+            loss = F.cross_entropy(logits, Y)
+            return loss
+        loss = closure()
         loss.backward()
-        optimizer.step()
+
+        # Compute gradient norm
+        total_norm = 0
+        for p in model.parameters():
+            if p.grad is not None:
+                param_norm = p.grad.data.norm(2)
+                total_norm += param_norm.item() ** 2
+        total_norm = total_norm ** 0.5
+
+        if optimizer_name in ['OSMM','OSGM',"OSMM2"]:
+            optimizer.step(closure)
+        else:
+            optimizer.step()
         optimizer.zero_grad()
-        wandb.log({'train_loss': loss.item(),'epoch': i})
+        wandb.log({'train_loss': loss.item(), 'epoch': i, 'grad_norm': total_norm})

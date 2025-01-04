@@ -1,0 +1,8 @@
+learning_rate: 0.1
+scheduler: None
+lr_decay: 1.0
+beta: 0.9
+beta_lr: 100
+relax_coef: 1.
+dampening: 0.
+gr_eps: 1e-08

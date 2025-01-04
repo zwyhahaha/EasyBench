@@ -26,7 +26,7 @@ class OSMM(Optimizer):
             raise ValueError("Invalid learning rate: {}".format(lr))
         if not 0.0 <= eps:
             raise ValueError(f"Invalid epsilon value: {eps}")
-        defaults = dict(lr=lr,eps=eps,beta=torch.tensor(beta),
+        defaults = dict(lr=lr,eps=eps,beta=beta,
                         weight_decay=weight_decay,stop_step=stop_step,
                         beta_lr=beta_lr, relax_coef=relax_coef,
                         gr_eps=gr_eps, min_beta=min_beta,
@@ -41,8 +41,6 @@ class OSMM(Optimizer):
             closure: A closure that reevaluates the model and returns the loss.
         """
         loss = None
-        if closure is not None:
-            loss = closure()
         for group in self.param_groups:
             for p in group["params"]:
                 if p.grad is None:
@@ -84,10 +82,10 @@ class OSMM(Optimizer):
                     if restart:
                         # state["Q"] = torch.zeros_like(p)
                         state["Q"] = state["Q_avg"]
-                        # group["beta"] = torch.tensor(0)
+                        # group["beta"] = float(0)
                         group["beta"] = state["beta_avg"]
                         state["Q_avg"] = torch.zeros_like(p)
-                        state["beta_avg"] = torch.tensor(0)
+                        state["beta_avg"] = float(0)
                         state["Gm"] = 0
                         state["G"] = torch.zeros_like(p)
                     else:
@@ -104,6 +102,8 @@ class OSMM(Optimizer):
                         state["beta_avg"] = state["beta_avg"]*(step-1)/step + group["beta"]/step
 
                     if closure is not None:
+                        loss = closure()
+
                         pcopy = p.data.clone()
                         p.add_(-(1-group["dampening"])*state["Q"]*grad).add_(group["beta"] * m)
 

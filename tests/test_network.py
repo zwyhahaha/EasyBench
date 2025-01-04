@@ -71,6 +71,7 @@ def test_network(config, seed=42, warmup=False):
                 #     return loss
 
                 # def closure():
+                #     output = model(data)
                 #     loss = F.cross_entropy(output, target)
                 #     return loss
                 # optimizer.step(closure)

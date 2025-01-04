@@ -9,15 +9,15 @@ import argparse
 from tests.utils import set_seed
 
 parser = argparse.ArgumentParser(description='Train the model with the best hyperparameters.')
-parser.add_argument('--model', type=str, default="logreg", help='The model to use for training')
-parser.add_argument('--task', type=str, default="network", help='The task to perform')
+parser.add_argument('--model', type=str, default="gpt", help='The model to use for training')
+parser.add_argument('--task', type=str, default="gpt", help='The task to perform')
 parser.add_argument('--dataset', type=str, default=None, help='dataset')
 parser.add_argument('--epochs', type=int, default=50, help='Number of epochs for training')
 parser.add_argument('--batch_size', type=int, default=16, help='Number of batches for training')
 parser.add_argument('--weight_decay', type=float, default=0, help='Weight decay for the optimizer')
 parser.add_argument('--seed', type=int, default=None)
 parser.add_argument('--scheduler', type=str, default=None) # ExponentialLR
-parser.add_argument('--optimizer', type=str, default='OSMM')
+parser.add_argument('--optimizer', type=str, default='OSMM2')
 parser.add_argument('--lr_decay', type=float, default=1.0)
 parser.add_argument('--overparam', action='store_true', help='Flag to indicate if the model is overparameterized')
 parser.add_argument('--target_samples', type=int, default=2000)
