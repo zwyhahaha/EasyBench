@@ -9,18 +9,16 @@ import argparse
 from tests.utils import set_seed
 
 parser = argparse.ArgumentParser(description='Train the model with the best hyperparameters.')
-parser.add_argument('--model', type=str, default="gpt", help='The model to use for training')
-parser.add_argument('--task', type=str, default="gpt", help='The task to perform')
-parser.add_argument('--dataset', type=str, default=None, help='dataset')
-parser.add_argument('--epochs', type=int, default=50, help='Number of epochs for training')
-parser.add_argument('--batch_size', type=int, default=16, help='Number of batches for training')
+parser.add_argument('--model', type=str, default="logreg", help='The model to use for training')
+parser.add_argument('--task', type=str, default="op", help='The task to perform')
+parser.add_argument('--dataset', type=str, default="ijcnn", help='dataset')
+parser.add_argument('--epochs', type=int, default=20, help='Number of epochs for training')
+parser.add_argument('--batch_size', type=lambda x: int(x) if x.isdigit() else x, default=128, help='Number of batches for training')
 parser.add_argument('--weight_decay', type=float, default=0, help='Weight decay for the optimizer')
-parser.add_argument('--seed', type=int, default=None)
+parser.add_argument('--seed', type=int, default=2)
 parser.add_argument('--scheduler', type=str, default=None) # ExponentialLR
-parser.add_argument('--optimizer', type=str, default='OSMM2')
+parser.add_argument('--optimizer', type=str, default='OSMM')
 parser.add_argument('--lr_decay', type=float, default=1.0)
-parser.add_argument('--overparam', action='store_true', help='Flag to indicate if the model is overparameterized')
-parser.add_argument('--target_samples', type=int, default=2000)
 args = parser.parse_args()
 
 model = args.model
@@ -44,8 +42,8 @@ else:
 
 for seed in seeds:
     set_seed(seed)
-    wandb.init(project=f'run_seeds_{model}_{task}_{dataset}_weight_decay_{args.weight_decay}')
-    # wandb.init(project=f'osmm_next_iter')
+    # wandb.init(project=f'run_seeds_{model}_{task}_{dataset}_weight_decay_{args.weight_decay}')
+    wandb.init(project=f'osmm_test_{model}_{task}_{dataset}')
 
     if dataset is not None:
         config_path = f'params/{task}/{model}/{dataset}_{batch_size}/{optimizer_name}.yaml'
@@ -76,7 +74,10 @@ for seed in seeds:
     elif task == 'gpt':
         from tests.test_gpt import test_gpt
         test_gpt(wandb.config, seed)
+    elif task == 'op':
+        from tests.test_op import test_op
+        test_op(wandb.config, seed)
     else:
-        raise NotImplementedError(f"task {task} is supported for now")
+        raise NotImplementedError(f"task {task} is not supported for now")
 
     wandb.finish()

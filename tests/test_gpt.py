@@ -65,7 +65,7 @@ def test_gpt(config, seed=42, warmup=False):
                 total_norm += param_norm.item() ** 2
         total_norm = total_norm ** 0.5
 
-        if optimizer_name in ['OSMM','OSGM',"OSMM2"]:
+        if optimizer_name in ['OSMM','OSGM',"OSMM2","OSMM3"]:
             optimizer.step(closure)
         else:
             optimizer.step()

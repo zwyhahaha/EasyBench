@@ -7,6 +7,11 @@ import math
 import torch.nn as nn
 import torch.nn.functional as F
 
+def get_op_model(train_set=None):
+    batch = train_set[0]
+    model = LogReg(input_dim=batch['images'].shape[0], output_dim=1)
+    return model
+
 class LogReg(nn.Module):
     """
     Convex logistic regression model

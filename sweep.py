@@ -22,6 +22,9 @@ elif task == 'network':
 elif task == 'gpt':
         from tests.test_gpt import test_gpt
         test_gpt(wandb.config, config.seed)
+elif task == 'op':
+    from tests.test_op import test_op
+    test_op(config, config.seed)
 else:
     raise NotImplementedError(f"task {task} is supported for now")
 

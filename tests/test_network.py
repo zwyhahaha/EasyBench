@@ -1,6 +1,7 @@
 import wandb
 import torch
 import numpy as np
+from math import ceil
 from torch.autograd import Variable
 import torch.nn.functional as F
 import os
@@ -44,6 +45,19 @@ def test_network(config, seed=42, warmup=False):
     train_loader, valid_loader = get_network_data(config, seed)
     optimizer = get_optimizer(optimizer_name, model.parameters(), config)
     scheduler = get_scheduler(optimizer, scheduler_name, lr_decay)
+    # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
+
+    # total_train_steps = ceil(len(train_loader) * epochs)
+    # def get_lr(step):
+    #     warmup_steps = int(total_train_steps * 0.23)
+    #     warmdown_steps = total_train_steps - warmup_steps
+    #     if step < warmup_steps:
+    #         frac = step / warmup_steps
+    #         return 0.0001 * (1 - frac) + 0.001 * frac
+    #     else:
+    #         frac = (step - warmup_steps) / warmdown_steps
+    #         return 0.001 * (1 - frac) + 0.00007 * frac
+    # scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, get_lr)
 
     next_data, next_target = None, None
     for epoch in range(epochs):
@@ -60,9 +74,9 @@ def test_network(config, seed=42, warmup=False):
             loss = F.cross_entropy(output, target)
             loss.backward()
             if optimizer_name in ['OSMM',"OSMM2"]:
-                beta = optimizer.param_groups[0]['beta'].item()
+                beta = 0# optimizer.param_groups[0]['beta'].item()
                 beta_epoch += beta
-            if optimizer_name in ['OSMM','OSGM',"OSMM2"]:
+            if optimizer_name in ['OSMM','OSGM',"OSMM2","OSMM3"]:
                 # next_data, next_target = next(iter(train_loader))
                 # next_data, next_target = next_data.to(device), next_target.to(device)
                 # def closure():
@@ -74,9 +88,9 @@ def test_network(config, seed=42, warmup=False):
                 #     output = model(data)
                 #     loss = F.cross_entropy(output, target)
                 #     return loss
-                # optimizer.step(closure)
+                # optimizer.step(closure, epoch=epoch)
 
-                optimizer.step()
+                optimizer.step(epoch=epoch)
             else:
                 optimizer.step()
             train_loss += loss.item()
@@ -118,15 +132,16 @@ def test_network(config, seed=42, warmup=False):
         valid_loss /= len(valid_loader.dataset)
         valid_acc /= len(valid_loader)
 
-        if warmup is False:
-            if optimizer_name in ['OSMM',"OSMM2"]:
-                wandb.log({'beta': beta_epoch/len(train_loader),
-                        'train_loss': train_loss,
-                        'valid_loss': valid_loss,
-                        'train_acc': train_acc,
-                        'valid_acc': valid_acc})
-            else:
-                wandb.log({'train_loss': train_loss,
-                        'valid_loss': valid_loss,
-                        'train_acc': train_acc,
-                        'valid_acc': valid_acc})
+        if optimizer_name in ['OSMM',"OSMM2"]:
+            wandb.log({'beta': beta_epoch/len(train_loader),
+                    'train_loss': train_loss,
+                    'valid_loss': valid_loss,
+                    'train_acc': train_acc,
+                    'valid_acc': valid_acc})
+        else:
+            wandb.log({'train_loss': train_loss,
+                    'valid_loss': valid_loss,
+                    'train_acc': train_acc,
+                    'valid_acc': valid_acc})
+        
+        print(f"Epoch {epoch+1}/{epochs} - Train Loss: {train_loss:.4f} - Train Acc: {train_acc:.4f} - Valid Loss: {valid_loss:.4f} - Valid Acc: {valid_acc:.4f}")

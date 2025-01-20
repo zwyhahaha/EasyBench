@@ -1,5 +1,5 @@
 from torch.optim import SGD, Adam, AdamW
-from optimizers import OSGM, OSMM, OSMM2
+from optimizers import OSGM, OSMM, OSMM2, OSMM3
 from torch.optim.lr_scheduler import ExponentialLR
 import torch
 from torch.utils.data import DataLoader, TensorDataset
@@ -65,6 +65,18 @@ def get_optimizer(optimizer_name, params, config):
                          relax_coef=relax_coef, gr_eps=gr_eps, min_beta=min_beta,
                          stop_step=stop_step, weight_decay=weight_decay,
                          dampening=dampening, adagrad=adagrad)
+    elif optimizer_name == 'OSMM3':
+        relax_coef = 1.5 if not hasattr(config,'relax_coef') else config.relax_coef
+        beta_lr = 0.1 if not hasattr(config,'beta_lr') else config.beta_lr
+        beta = 0.9 if not hasattr(config,'beta') else config.beta
+        min_beta = -0.0005 if not hasattr(config,'min_beta') else config.min_beta
+        gr_eps = 1e-8 if not hasattr(config,'gr_eps') else config.gr_eps
+        stop_step = None if not hasattr(config,'stop_step') else config.stop_step
+        dampening = 0.0 if not hasattr(config,'dampening') else config.dampening
+        optimizer = OSMM3(params, lr=learning_rate, beta_lr=beta_lr, beta=beta, 
+                         relax_coef=relax_coef, gr_eps=gr_eps, min_beta=min_beta,
+                         stop_step=stop_step, weight_decay=weight_decay,
+                         dampening=dampening)
     else:
         raise ValueError("Invalid optimizer name")
     return optimizer
@@ -116,72 +128,6 @@ def batch_crop(images, crop_size):
             mask = (shifts[:, 1] == s)
             images_out[mask] = images_tmp[mask, :, :, r+s:r+s+crop_size]
     return images_out
-
-class CifarLoader:
-
-    def __init__(self, path, train=True, batch_size=500, aug=None, drop_last=None, shuffle=None, seed=0):
-        set_seed(seed)
-        data_path = os.path.join(path, 'train.pt' if train else 'test.pt')
-        if not os.path.exists(data_path):
-            dataset = datasets.CIFAR10(path, download=True, train=train)
-            images = torch.tensor(dataset.data)
-            labels = torch.tensor(dataset.targets)
-            torch.save({'images': images, 'labels': labels, 'classes': dataset.classes}, data_path)
-
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        data = torch.load(data_path, map_location=device)
-        self.images, self.labels, self.classes = data['images'], data['labels'], data['classes']
-        # It's faster to load+process uint8 data than to load preprocessed fp16 data
-        # self.images = (self.images.half() / 255).permute(0, 3, 1, 2).to(memory_format=torch.channels_last)
-        self.images = (self.images / 255).permute(0, 3, 1, 2).to(memory_format=torch.channels_last)
-
-        self.normalize = transforms.Normalize(CIFAR_MEAN, CIFAR_STD)
-        self.proc_images = {} # Saved results of image processing to be done on the first epoch
-        self.epoch = 0
-
-        self.aug = aug or {}
-        for k in self.aug.keys():
-            assert k in ['flip', 'translate'], 'Unrecognized key: %s' % k
-
-        self.batch_size = batch_size
-        self.drop_last = train if drop_last is None else drop_last
-        self.shuffle = train if shuffle is None else shuffle
-
-        self.dataset = self.images
-
-    def __len__(self):
-        return len(self.images)//self.batch_size if self.drop_last else ceil(len(self.images)/self.batch_size)
-
-    def __iter__(self):
-
-        if self.epoch == 0:
-            images = self.proc_images['norm'] = self.normalize(self.images)
-            # Pre-flip images in order to do every-other epoch flipping scheme
-            if self.aug.get('flip', False):
-                images = self.proc_images['flip'] = batch_flip_lr(images)
-            # Pre-pad images to save time when doing random translation
-            pad = self.aug.get('translate', 0)
-            if pad > 0:
-                self.proc_images['pad'] = F.pad(images, (pad,)*4, 'reflect')
-
-        if self.aug.get('translate', 0) > 0:
-            images = batch_crop(self.proc_images['pad'], self.images.shape[-2])
-        elif self.aug.get('flip', False):
-            images = self.proc_images['flip']
-        else:
-            images = self.proc_images['norm']
-        # Flip all images together every other epoch. This increases diversity relative to random flipping
-        if self.aug.get('flip', False):
-            if self.epoch % 2 == 1:
-                images = images.flip(-1)
-
-        self.epoch += 1
-
-        indices = (torch.randperm if self.shuffle else torch.arange)(len(images), device=images.device)
-        for i in range(len(self)):
-            idxs = indices[i*self.batch_size:(i+1)*self.batch_size]
-            yield (images[idxs], self.labels[idxs])
-
 
 def get_network_data(config,seed):
     set_seed(seed)
@@ -252,8 +198,6 @@ def get_network_data(config,seed):
             ])),
             batch_size=2000, shuffle=False, num_workers=4,
             pin_memory=True)
-        # valid_loader = CifarLoader('data', train=False, batch_size=2000, seed=seed)
-        # train_loader = CifarLoader('data', train=True, batch_size=batch_size, aug=None, seed=seed)
         return train_loader, valid_loader
     else:
         raise Exception('Unknown dataset: {}'.format(config.dataset))

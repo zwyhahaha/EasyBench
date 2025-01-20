@@ -1,0 +1,43 @@
+program: sweep.py
+method: grid  # available methods: grid, random, bayes
+project: osmm_test_logreg_op_ijcnn
+metric:
+  name: train_loss
+  goal: minimize
+parameters:
+  batch_size:
+    value: 128
+  epochs:
+    value: 200
+  stop_step:
+    value: None
+  task:
+    value: 'op'
+  model:
+    value: 'logreg'
+  dataset:
+    value: 'ijcnn'
+  optimizer:
+    values: ['OSMM2']
+  learning_rate:
+    values: [10,1.0,0.1,]
+  relax_coef:
+    value: 1.0
+  beta:
+    value: 0.9
+  beta_lr:
+    values: [0.1,1.0]
+  gr_eps:
+    value: 1e-8
+  scheduler:
+    value: None
+  lr_decay:
+    value: 1.0
+  weight_decay:
+    value: 0
+  dampening:
+    value: 0.0
+  adagrad:
+    value: True
+  seed:
+    values: [2]
