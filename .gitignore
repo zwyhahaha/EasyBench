@@ -12,3 +12,6 @@ data/
 tests/__pycache__/
 optimizers/__pycache__/
 models/__pycache__/
+data/__pycache__
+__pycache__/
+optimizers/__pycache__
