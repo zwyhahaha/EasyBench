@@ -1,7 +1,7 @@
 import sls
 import exp_configs
 import torch
-
+import optimizers
 
 
 def get_optimizer(opt, params, n_batches_per_epoch=None, train_set_len=None):
@@ -112,7 +112,23 @@ def get_optimizer(opt, params, n_batches_per_epoch=None, train_set_len=None):
 
     elif opt_name == 'sgd':
         opt = torch.optim.SGD(params, lr=opt_dict.get("lr") or 1e-3)
+    
+    elif opt_name == 'nag':
+        opt = torch.optim.SGD(params, lr=opt_dict.get("lr") or 1e-3, momentum=0.9, nesterov=True)
 
+    # ===============================================
+    # HDM
+    elif opt_name in exp_configs.hdm_opt_list:
+        _, P_version, beta_version = opt_name.split('_')
+        opt = optimizers.HDM(params,
+                             P_lr=opt_dict.get("lr") or 1e-3,
+                             beta_lr=opt_dict.get("beta_lr") or 1e-3,
+                             P_version=P_version,
+                             beta_version=beta_version,
+                             relax_coef=opt_dict.get("relax_coef") or 1.0,
+                             monotone_epoch=opt_dict.get("monotone_epoch") or -1,
+                             normalize=opt_dict.get("normalize") or False,
+                             )
     else:
         raise ValueError("opt %s does not exist..." % opt_name)
 

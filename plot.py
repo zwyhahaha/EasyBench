@@ -5,28 +5,27 @@ from haven import haven_results as hr
 from haven import haven_utils as hu
 import argparse
 from matplotlib.backends.backend_pdf import PdfPages
+import exp_configs
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-p', '--problem', default="")
+parser.add_argument('-p', '--problem', default="mushrooms")
 args = parser.parse_args()
 
 x_metric = "epoch"  # "epoch" "time"
 #exp1
-savedir_base = ""
-filterby_list = [{"opt": {"beta_b": 0.9, "name": "sgd_armijo", "reset_option": 11}},
-                 {'opt': {"c_step": 0.2, "name": "polyak", "max_eta": 10, "averaging_mode": 2000}},
-                 {"opt": {"beta_b": 0.5, "c": 0.5, "c_step": 0.1, "max_eta": 10, "name": "sls_zhangNM_polyak", "averaging_mode": 13}},
-                 {"opt": {"name": "sgd"}},
-                 {"opt": {"name": "adam"}}
+savedir_base = f"results/{args.problem}"
+filterby_list = [
+                 {"opt": {"name": "sgd", "lr": exp_configs.sgd_lr[args.problem]}},
+                 {"opt": {"name": "adam", "lr": exp_configs.adam_lr[args.problem]}},
+                 {"opt": {"name": "hdm_diag_scalar", "lr": 1.0, "beta_lr": 0.01, "relax_coef": 1.1}},
+                # {"opt": {"name": "hdm_scalar_scalar", "lr": 1.0, "beta_lr": 0.01, "relax_coef": 1.1}},
+                {"opt": {"name": "hdm_scalar_scalar", "lr": 0.1, "beta_lr": 0.1, "relax_coef": 1.1}},
                  ]
-new_legend_list = ["opt.name", 'opt.averaging_mode']
+new_legend_list = ["opt.name","opt.lr"]
 map_legend_list = {
-    "sgd_armijo|None": "SLS",
-    "polyak|2000": "SPS",
-    "sls_zhangNM_polyak|13": "PoNoS",
-    "sls_zhangNM_polyak|None": "PoNoS_reset0",
-    "sgd|None": "SGD",
-    "adam|None": "Adam",
+    "sgd": "SGD",
+    "adam": "Adam",
+    "hdm_diag_scalar|None": "HDM_DIAG_SCALAR",
 }
 
 #reset_short
@@ -106,27 +105,27 @@ map_legend_list = {
 
 #convex_short
 # savedir_base = ''
-# filterby_list = [{"opt": {"beta_b": 0.9, "name": "sgd_armijo", "reset_option": 11}},
-#                  {'opt': {"c_step": 0.2, "name": "polyak", "averaging_mode": 2000}},
-#                  {"opt": {"beta_b": 0.5, "c": 0.5, "c_step": 0.1, "name": "sls_zhangNM_polyak", "averaging_mode": 13}},
-#                  {"opt": {"name": "adam", "lr": 0.1}},
-#                  {"opt": {"name": "sgd", "lr": 0.1}}]
-# new_legend_list = ["opt.name", 'opt.averaging_mode', 'opt.c']
+# filterby_list = [
+#                 #  {"opt": {"name": "adam", "lr": 0.1}},
+#                 #  {"opt": {"name": "sgd", "lr": 0.1}},
+#                  {"opt": {"name": "adam", "lr": 100.0}},
+#                  {"opt": {"name": "sgd", "lr": 100.0}},
+#                 #  {"opt": {"name": "hdm_diag_scalar", "lr": 0.1, "beta_lr":0.1}},
+#                 #  {"opt": {"name": "hdm_diag_scalar", "lr": 1.0, "beta_lr":0.1}},
+#                 #  {"opt": {"name": "hdm_diag_scalar", "lr": 10.0, "beta_lr":0.1}},
+#                  {"opt": {"name": "hdm_diag_scalar", "lr": 100.0, "beta_lr":0.1}},
+#                 #  {"opt": {"name": "hdm_scalar_scalar", "lr": 1.0, "beta_lr":0.1}},
+#                 #  {"opt": {"name": "hdm_scalar_scalar", "lr": 10.0, "beta_lr":0.1}},
+#                  {"opt": {"name": "hdm_scalar_scalar", "lr": 100.0, "beta_lr":0.1}},
+#                 ]
+# new_legend_list = ["opt.name","opt.lr","opt.beta_lr"]
 # map_legend_list = {
-#     "sgd_armijo|None|None": "SLS",
-#     "polyak|2000|None": "SPS",
-#     "sls_zhangNM_polyak|13|0.5": "PoNoS",
-#     "sls_zhangNM_polyak|None|0.1": "zhang|0.1",
-#     "sls_polyak|None|0.1": "monotone|0.1",
-#     "sls_polyak|None|0.5": "monotone|0.5",
-#     "sls_zhangNM_polyak|None|0.5": "PoNoS_reset0",
-#     "sgd|None|None": "SGD",
-#     "adam|None|None": "Adam",
+#     "sgd": "SGD",
+#     "adam": "Adam",
 # }
-# y_metric_list_convex = ['smooth_loss', 'val_acc', 'train_epoch_time', 'n_backtr', 'all_step_size', 'all_grad_norm', "all_orig_step", 'val_acc']
+y_metric_list_convex = ['train_loss', 'val_acc', 'train_epoch_time',]
 
-
-#convex
+# convex
 # savedir_base = ''
 # filterby_list = [
 #                  {"opt": {"beta_b": 0.5, "c": 0.5, "c_step": 0.1, "name": "sls_zhangNM_polyak", "averaging_mode": 13}},
@@ -153,7 +152,7 @@ map_legend_list = {
 # filterby_list = []
 
 
-savedir_base = savedir_base + args.problem
+
 
 # get experiments
 rm = hr.ResultManager(savedir_base=savedir_base,
@@ -173,9 +172,9 @@ y_metrics = ['train_loss', 'val_acc']
 
 # launch dashboard
 hj.get_dashboard(rm, vars(), wide_display=True)
-y_metric_list = ['train_loss', 'val_acc', 'train_epoch_time', 'backtracks', 'agv_step_size', 'grad_norm', "orig_step"]
+y_metric_list = ['train_loss', 'val_acc', 'train_epoch_time']
 num_normal_measures = len(y_metric_list)
-additional_metric = ['val_acc', 'backtracks']
+additional_metric = ['val_acc']
 y_metric_list = y_metric_list + additional_metric
 x_lim = 200
 xlim_list = [[0, x_lim] for i in range(len(y_metric_list))]
@@ -207,25 +206,26 @@ elif "xl" in savedir_base:
     y_metric_list = y_metric_list + ['train_metric', 'val_metric', 'backtracks']
     xlim_list = [[0, x_lim] for i in range(len(y_metric_list))]
 elif "mushrooms" in savedir_base:
-    x_metric = "iter"
+    # x_metric = "iter"
     y_metric_list = y_metric_list_convex
     ylim_list = [None] * len(y_metric_list_convex)
     ylim_list[-1] = [0.99, 1.0001]
-    xlim_list = [[0, 2000] for i in range(len(y_metric_list))]
+    x_lim = 2000
+    xlim_list = [[0, x_lim] for i in range(len(y_metric_list))]
     xlim_list[-1] = None
 elif "rcv1" in savedir_base:
-    x_metric = "iter"
+    # x_metric = "iter"
     y_metric_list = y_metric_list_convex
     ylim_list = [None] * len(y_metric_list_convex)
     ylim_list[-1] = [0.9, 0.98]
-    xlim_list = [[0, 2000] for i in range(len(y_metric_list))]
+    xlim_list = [[0, 35] for i in range(len(y_metric_list))]
     xlim_list[-1] = None
 elif "ijcnn" in savedir_base:
-    x_metric = "iter"
+    # x_metric = "iter"
     y_metric_list = y_metric_list_convex
     ylim_list = [None] * len(y_metric_list_convex)
     ylim_list[-1] = [0.96, 0.98]
-    xlim_list = [[0, 2000] for i in range(len(y_metric_list))]
+    xlim_list = [[0, 35] for i in range(len(y_metric_list))]
     xlim_list[-1] = None
 elif "w8a" in savedir_base:
     x_metric = "iter"
@@ -285,11 +285,16 @@ map_ylabel_list = [{"agv_step_size": "average step size",
                     "avg_backtracks": "average of backtracks",}]
 map_xlabel_list = [{"time": "cumulative runtime (s)"}]
 
+import os
+
 for i, y_metric in enumerate(y_metric_list):
+    img_dir = f"img/{args.problem}"
+    os.makedirs(img_dir,exist_ok=True)
     if i < num_normal_measures:
-        pp = PdfPages("{}.pdf".format(y_metric))
+        pp = PdfPages(f"{img_dir}/{y_metric}.pdf")
     else:
-        pp = PdfPages("{}_focus.pdf".format(y_metric))
+        pp = PdfPages(f"{img_dir}/{y_metric}_focus.pdf")
+    
     print(y_metric)
     default_loc = {"loc":"lower right"}
     if y_metric in ["train_loss", "backtracks", "grad_norm", "d_norm", "train_metric", "val_metric", "smooth_loss", "n_backtr", "all_grad_norm", "avg_backtracks", "diff_backtracks"]:

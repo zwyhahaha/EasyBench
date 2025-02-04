@@ -140,3 +140,6 @@ data/
 .data/
 
 trainval_borgy.py
+
+results/
+img/

@@ -163,6 +163,11 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, metrics_flag=True):
                 else:
                     closure_single = lambda: exit(1)
                 opt.step(closure, closure_single)
+            elif exp_dict["opt"]["name"] in exp_configs.hdm_opt_list:
+                closure = lambda: loss_function(model, images, labels)
+                loss = closure()
+                loss.backward()
+                opt.step(loss, closure, epoch)
             else:
                 loss = loss_function(model, images, labels)
                 loss.backward()
@@ -227,15 +232,13 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, metrics_flag=True):
     if ut.check_debug_mode_value(exp_dict["opt"]):
         wandb.finish()
 
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-e', '--exp_group_list', nargs='+')
-    parser.add_argument('-sb', '--savedir_base', required=True)
-    parser.add_argument('-d', '--datadir', required=True)
-    parser.add_argument('-r', '--reset',  default=0, type=int)
+    parser.add_argument('-e', '--exp_group_list', nargs='+', default=['ijcnn'])
+    parser.add_argument('-sb', '--savedir_base', default='results')
+    parser.add_argument('-d', '--datadir', default='data')
+    parser.add_argument('-r', '--reset',  default=1, type=int)
     parser.add_argument('-ei', '--exp_id', default=None)
 
     args = parser.parse_args()
@@ -244,13 +247,14 @@ if __name__ == '__main__':
     # -------------------
     if args.exp_id is not None:
         # select one experiment
-        savedir = os.path.join(args.savedir_base, args.exp_id)
+        savedir = os.path.join(args.savedir_base, args.exp_group_list[0], args.exp_id)
         exp_dict = hu.load_json(os.path.join(savedir, 'exp_dict.json'))
         exp_list = [exp_dict]
     else:
         # select exp group
         exp_list = []
         for exp_group_name in args.exp_group_list:
+            savedir = os.path.join(args.savedir_base,exp_group_name)
             exp_list += exp_configs.EXP_GROUPS[exp_group_name]
 
 
@@ -259,6 +263,6 @@ if __name__ == '__main__':
     for exp_dict in exp_list:
         # do trainval
         trainval(exp_dict=exp_dict,
-                savedir_base=args.savedir_base,
+                savedir_base=savedir,
                 datadir=args.datadir,
                 reset=args.reset)

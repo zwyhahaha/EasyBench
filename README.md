@@ -2,9 +2,6 @@
 
 The first nonmonotone stochastic line search method training DL models faster than SGD and Adam.
 
-![alt text](img/figure1.png)
-
-
 ### 0. PoNoS as a ```torch.optim.Optimizer```
 
 The file ```PoNoS.py``` is a self contained class implementing our new algorithm PoNoS as ```torch.optim.Optimizer```.
@@ -31,6 +28,10 @@ Set to ```True``` the options ```download``` in the file ```src/datasets.py```
 
 `python trainval.py -e mnist_mlp -sb results/mnist_mlp -d data -r 1`
 
+`CUDA_VISIBLE_DEVICES=7 python trainval.py -e rcv1 -sb results -d data -r 1`
+
+CUDA_VISIBLE_DEVICES=3 python trainval.py -e cifar10_resnet cifar10_densenet cifar100_res cifar100_dense fashion_effb1 svhn_wrn trans_enc trans_xl -sb results -d data -r 1
+
 where `-e` is the experiment group, `-sb` is the result directory, and `-d` is the dataset directory.
 The experiment group is referring to the key of the dict ```EXP_GROUPS```, that can be found in the file ```exp_configs.py```,
 from that file it is possible to customize thoroughly the experiment. 
@@ -41,7 +42,17 @@ In the file ```plot.py``` set the variable ```savedir_base``` to point at the ro
 
 `python plot.py -p mnist_mlp`
 
+`python plot.py -p mushrooms`
 
+python plot.py -p rcv1
+
+fashion_effb1 svhn_wrn trans_enc trans_xl
+```bash
+CUDA_VISIBLE_DEVICES=7 python trainval.py -e fashion_effb1 -sb results -d data -r 1 &
+CUDA_VISIBLE_DEVICES=6 python trainval.py -e svhn_wrn -sb results -d data -r 1 &
+CUDA_VISIBLE_DEVICES=5 python trainval.py -e trans_enc -sb results -d data -r 1 &
+CUDA_VISIBLE_DEVICES=4 python trainval.py -e trans_xl -sb results -d data -r 1 &
+```
 
 ### Citation
 
@@ -53,3 +64,13 @@ In the file ```plot.py``` set the variable ```savedir_base``` to point at the ro
 	year={2023}
 }
 ```
+
+rcv1
+filterby_list = [
+                 {"opt": {"name": "sgd", "lr": exp_configs.sgd_lr[args.problem]}},
+                 {"opt": {"name": "adam", "lr": exp_configs.adam_lr[args.problem]}},
+                 {"opt": {"name": "hdm_diag_scalar", "lr": 1.0, "beta_lr": 0.01, "relax_coef": 1.1}},
+                # {"opt": {"name": "hdm_scalar_scalar", "lr": 1.0, "beta_lr": 0.01, "relax_coef": 1.1}},
+                {"opt": {"name": "hdm_scalar_scalar", "lr": 0.1, "beta_lr": 0.1, "relax_coef": 1.1}},
+                 ]
+                 

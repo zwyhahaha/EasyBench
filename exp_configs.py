@@ -4,44 +4,76 @@ suffixes = ["", "_NM", "_trueNM", "_zhangNM", "_epochNM"]
 armijo_list = ["sgd" + suff + "_armijo" for suff in suffixes]
 sls_ada_list = ["sls_ada" + suff for suff in suffixes]
 sls_polyak_list = ["sls" + suff + "_polyak" for suff in suffixes] + ["polyak"]
-
 ours_opt_list = armijo_list + sls_polyak_list + sls_ada_list
 
-exp1 = [{"beta_b": 0.9, "name": "sgd_armijo", "reset_option": 11}, 
-        {"c_step": 0.2, "name": "polyak", "max_eta": 10, "averaging_mode": 2000},
-        {"beta_b": 0.5, "c": 0.5, "c_step": 0.1, "max_eta": 10, "name": "sls_zhangNM_polyak", "averaging_mode": 13}] # PoNoS
+hdm_opt_list = ["hdm_diag_scalar", "hdm_diag_diag", "hdm_scalar_scalar", "hdm_scalar_diag"]
 
-reset =[{"beta_b": 0.5, "c": 0.5, "c_step": 0.1, "name": "sls_zhangNM_polyak", "averaging_mode": 13},
-        {"beta_b": 0.5, "c": 0.5, "c_step": 0.1, "max_eta": 10, "name": "sls_zhangNM_polyak", "averaging_mode": None},
-        {"beta_b": 0.5, "c": 0.5, "c_p": 0.1, "name": "sgd_zhangNM_armijo", "reset_option": 3},
-        {"beta_b": 0.5, "c": 0.5, "c_p": 0.1, "name": "sgd_zhangNM_armijo", "reset_option": 4},
-        {"beta_b": 0.5, "c": 0.5, "name": "sgd_zhangNM_armijo", "reset_option": 11},
-        {"beta_b": 0.5, "c": 0.5, "c_step": 0.1, "name": "sls_zhangNM_polyak", "sls_every": 2}]
+exps = ["mnist_mlp","cifar10_resnet","cifar10_densenet","cifar100_res",
+        "cifar100_dense","fashion_effb1","svhn_wrn","mushrooms","ijcnn","rcv1",
+        "w8a","trans_enc","trans_xl"]
 
-trans = [{"name": "polyak", "c_step": 0.2, "max_eta": 10, "averaging_mode": 2000},
-         {"name": "sgd_armijo", "beta_b": 0.9, "reset_option": 11},
-         {"name": "sls_zhangNM_polyak", "beta_b": 0.5, "c": 0.5, "c_step": 0.1, "max_eta": 10, "averaging_mode": 13},
-         {"name": "sls_ada", 'reset_option': 2000, "c_step": 0.2, "eta_max": 10, "suff_decr": "grad_norm"},
-         {"name": "sls_ada", 'reset_option': 11,  "beta_b": 0.9, "suff_decr": "pp_norm", "eta_max": 10},
-         {"name": "sls_ada_zhangNM", "suff_decr": "pp_norm", "c_step": 0.1, "reset_option": 200, "eta_max": 10}]
+adam_lr = {
+    "mnist_mlp": 1e-4,
+    "cifar10_resnet": 1e-3,
+    "cifar10_densenet": 1e-3,
+    "cifar100_res": 1e-3,
+    "cifar100_dense": 1e-3,
+    "fashion_effb1": 1e-3,
+    "svhn_wrn": 1e-3,
+    "mushrooms": 10,
+    "ijcnn": 0.1, # better than 1.0
+    "rcv1": 0.1, # better than 1.0
+    "w8a": 0.1,
+    "trans_enc": 2.5 * 1e-4,
+    "trans_xl": 2.5 * 1e-4,
+}
 
-convex = [{"beta_b": 0.9, "name": "sgd_armijo", "reset_option": 11, "eta_max": 1e10},
-          {"c_step": 0.2, "name": "polyak", "max_eta": 1e10, "averaging_mode": 2000},
-          {"beta_b": 0.5, "c": 0.5, "c_step": 0.1, "max_eta": 1e10, "name": "sls_zhangNM_polyak", "averaging_mode": 13},
-          {"beta_b": 0.5, "c": 0.5, "c_step": 0.1, "name": "sls_zhangNM_polyak"},
-          {"beta_b": 0.5, "c": 0.1, "c_step": 0.1, "name": "sls_zhangNM_polyak"},
-          {"beta_b": 0.5, "c": 0.1, "c_step": 0.1, "name": "sls_polyak"},
-          {"beta_b": 0.5, "c": 0.5, "c_step": 0.1, "name": "sls_polyak"}]
+sgd_lr = {
+    "mnist_mlp": 0.1,
+    "cifar10_resnet": 0.1,
+    "cifar10_densenet": 0.1,
+    "cifar100_res": 0.1,
+    "cifar100_dense": 0.1,
+    "fashion_effb1": 0.1,
+    "svhn_wrn": 0.1,
+    "mushrooms": 1000,
+    "ijcnn": 100,
+    "rcv1": 100,
+    "w8a": 100,
+    "trans_enc": 0.5,
+    "trans_xl": 0.25,
+}
 
-study_on_c = [{"beta_b": 0.5, "c": 0.5, "c_step": 0.1, "name": "sls_zhangNM_polyak"},
-              {"beta_b": 0.5, "c": 0.1, "c_step": 0.1, "name": "sls_zhangNM_polyak"},
-              {"beta_b": 0.5, "c": 0.1, "c_step": 0.1, "name": "sls_polyak"},
-              {"beta_b": 0.5, "c": 0.5, "c_step": 0.1, "name": "sls_polyak"}]
+bench_opt = {}
+for exp in exps:
+    opt_configs = []
+    # opt_configs.append({"name": "sgd", "lr": sgd_lr[exp]})
+    opt_configs.append({"name": "adam", "lr": adam_lr[exp]})
+    bench_opt[exp] = opt_configs
 
-line_search = [{"beta_b": 0.5, "c": 0.5, "c_step": 0.1, "name": "sls_zhangNM_polyak", "averaging_mode": 13},
-               {"NM_window": None, "beta_b": 0.5, "c": 0.5, "c_step": 0.1, "name": "sls_trueNM_polyak"},
-               {"beta_b": 0.5, "c": 0.5, "c_step": 0.1, "name": "sls_epochNM_polyak"},
-               {"beta_b": 0.5, "c": 0.5, "c_step": 0.1, "name": "sls_polyak"}]
+hdm_scalar_scalar_lr = {
+    "mnist_mlp": 1e-4,
+    "rcv1": 0.1,
+}
+
+hdm_diag_scalar_lr = {
+    "mnist_mlp": 1e-4,
+    "rcv1": 0.1,
+}
+
+hdm_opt = {}
+lr_lst = [1e-1,1e-2,1e-3,1e-4]
+beta_lr_lst = [0.1,1.0,10.0]
+lr_lst = [1.0]
+beta_lr_lst = [0.01]
+for exp in exps:
+    opt_configs = []
+    for lr in lr_lst:
+        for beta_lr in beta_lr_lst:
+            # opt_configs.append({"name": "hdm_diag_scalar", "lr": lr, "beta_lr":beta_lr, "normalize": 0})
+            # opt_configs.append({"name": "hdm_scalar_scalar", "lr": lr, "beta_lr":beta_lr, "normalize": 1})
+            opt_configs.append({"name": "hdm_scalar_scalar", "lr": lr, "beta_lr":beta_lr, "normalize": 0})
+    hdm_opt[exp] = opt_configs
 
 long_run = 200
 short_run = 75
@@ -52,7 +84,7 @@ EXP_GROUPS = {
             "model":["mlp"],
             "not_save_pth": True,
             "loss_func": ["softmax_loss"],
-            "opt": exp1,
+            "opt": hdm_opt["mnist_mlp"],
             "acc_func":["softmax_accuracy"],
             "batch_size":[128],
             "max_epoch":[long_run],
@@ -62,7 +94,7 @@ EXP_GROUPS = {
             "model":["resnet34"],
             "not_save_pth": True,
             "loss_func": ["softmax_loss"],
-            "opt": exp1,
+            "opt": hdm_opt["cifar10_resnet"],
             "acc_func":["softmax_accuracy"],
             "batch_size":[128],
             "max_epoch":[long_run],
@@ -72,7 +104,7 @@ EXP_GROUPS = {
             "model":["densenet121"],
             "not_save_pth": True,
             "loss_func": ["softmax_loss"],
-            "opt": exp1,
+            "opt": hdm_opt["cifar10_densenet"],
             "acc_func":["softmax_accuracy"],
             "batch_size":[128],
             "max_epoch":[long_run],
@@ -82,7 +114,7 @@ EXP_GROUPS = {
             "model":["resnet34_100"],
             "not_save_pth": True,
             "loss_func": ["softmax_loss"],
-            "opt": exp1,
+            "opt": hdm_opt["cifar100_res"],
             "acc_func":["softmax_accuracy"],
             "batch_size":[128],
             "max_epoch":[long_run],
@@ -92,7 +124,7 @@ EXP_GROUPS = {
             "model":["densenet121_100"],
             "not_save_pth": True,
             "loss_func": ["softmax_loss"],
-            "opt": exp1,
+            "opt": hdm_opt["cifar100_dense"],
             "acc_func":["softmax_accuracy"],
             "batch_size":[128],
             "max_epoch":[long_run],
@@ -102,36 +134,36 @@ EXP_GROUPS = {
                        "model": ["efficientnet-b1"],
                        "not_save_pth": True,
                        "loss_func": ["softmax_loss"],
-                       "opt": exp1,
+                       "opt": hdm_opt["fashion_effb1"],
                        "acc_func": ["softmax_accuracy"],
                        "batch_size": [128],
-            "max_epoch":[long_run],
+                       "max_epoch":[long_run],
                        "runs":[0]},
 
         "svhn_wrn":{"dataset":["svhn"],
             "model":["wrn_10"],
             "not_save_pth": True,
             "loss_func": ["softmax_loss"],
-            "opt": exp1,
+            "opt": hdm_opt["svhn_wrn"],
             "acc_func":["softmax_accuracy"],
             "batch_size":[128],
-            "max_epoch":[long_run],
+            "max_epoch":[short_run],
             "runs":[0]},
 
     "mushrooms": {"dataset": ["mushrooms"],
                   "model": ["logistic"],
                   "loss_func": ['logistic_loss'],
                   "acc_func": ["logistic_accuracy"],
-                  "opt": convex,
+                  "opt": hdm_opt["mushrooms"],
                   "batch_size": [100],
-                  "max_epoch": [35],
+                  "max_epoch": [10],
                   "runs": [0]},
 
     "ijcnn": {"dataset": ["ijcnn"],
                "model": ["logistic"],
                "loss_func": ['logistic_loss'],
                "acc_func": ["logistic_accuracy"],
-               "opt": convex,
+               "opt": bench_opt["ijcnn"],
                "batch_size": [100],
                "max_epoch": [35],
                "runs": [0]},
@@ -140,7 +172,7 @@ EXP_GROUPS = {
                   "model": ["logistic"],
                   "loss_func": ['logistic_loss'],
                   "acc_func": ["logistic_accuracy"],
-                  "opt": convex,
+                  "opt": hdm_opt["rcv1"],
                   "batch_size": [100],
                   "max_epoch": [35],
                   "runs": [0]},
@@ -149,7 +181,7 @@ EXP_GROUPS = {
                   "model": ["logistic"],
                   "loss_func": ['logistic_loss'],
                   "acc_func": ["logistic_accuracy"],
-                  "opt": convex,
+                  "opt": bench_opt["w8a"],
                   "batch_size": [100],
                   "max_epoch": [35],
                   "runs": [0]},
@@ -159,7 +191,7 @@ EXP_GROUPS = {
                   "not_save_pth": True,
                   "model_args": {"tgt_len": 35},
                   "loss_func": ["softmax_loss"],
-                  "opt": trans,
+                  "opt": bench_opt["trans_enc"],
                   "acc_func": ["ppl"],
                   "batch_size": [64],
                   "max_epoch": [100],
@@ -180,7 +212,7 @@ EXP_GROUPS = {
                        "mem_len": 128,
                  },
                  "loss_func": ["softmax_loss"],
-                  "opt": trans,
+                  "opt": bench_opt["trans_xl"],
                  "acc_func": ["ppl"],
                  "batch_size": [64],
                  "max_epoch": [100],
