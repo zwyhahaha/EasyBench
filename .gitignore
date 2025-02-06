@@ -143,3 +143,5 @@ trainval_borgy.py
 
 results/
 img/
+__temp_pipreqsnb_folder
+optimizers/reference_hdm.txt

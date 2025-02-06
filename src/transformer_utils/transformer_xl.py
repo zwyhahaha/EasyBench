@@ -873,8 +873,10 @@ class MemTransformerLM(nn.Module):
             return [loss] + new_mems
 
 
-CUDA_MAJOR = int(torch.version.cuda.split(".")[0])
-CUDA_MINOR = int(torch.version.cuda.split(".")[1])
+# CUDA_MAJOR = int(torch.version.cuda.split(".")[0])
+# CUDA_MINOR = int(torch.version.cuda.split(".")[1])
+CUDA_MAJOR = 0
+CUDA_MINOR = 0
 
 
 class ProjectedAdaptiveLogSoftmax(nn.Module):

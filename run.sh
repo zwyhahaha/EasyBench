@@ -8,4 +8,4 @@ CUDA_VISIBLE_DEVICES=4 python trainval.py -e cifar100_dense -sb results -d data 
 CUDA_VISIBLE_DEVICES=5 python trainval.py -e svhn_wrn -sb results -d data -r 1 &
 # CUDA_VISIBLE_DEVICES=2 python trainval.py -e w8a -sb results -d data -r 1 &
 # CUDA_VISIBLE_DEVICES=1 python trainval.py -e ijcnn -sb results -d data -r 1
-# python plot.py -p ijcnn
+# python plot.py -p w8a
